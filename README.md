@@ -19,7 +19,7 @@ The script `macro.vba` is embedded in the base template of the Microsoft Office 
 
 * Embed the macro in Word by opening Word, pressing `Alt`+`F11` and pasting the code in a new script file.
 
-* On Linux, install `pip`, and via that install `python-telegram-bot .
+* On Linux, install `pip`, and via that install `python-telegram-bot`.
 
 * Place `print_poller` and its content on `C:\`
 
