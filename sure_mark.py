@@ -13,8 +13,9 @@ def start(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id, text="I'm a bot, please talk to me!")
 
 def echo(update, context):
-    context.bot.send_message(chat_id=update.effective_chat.id, text=update.message.text)
-
+    context.bot.send_message(chat_id=update.effective_chat.id, text="Okay, printing...")
+    with open("to_print.txt", "w") as file:
+        file.write(update.message.text)
 
 
 start_handler = CommandHandler('start', start)
@@ -22,7 +23,6 @@ dispatcher.add_handler(start_handler)
 
 echo_handler = MessageHandler(Filters.text, echo)
 dispatcher.add_handler(echo_handler)
-
 
 
 updater.start_polling()
