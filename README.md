@@ -1,5 +1,7 @@
 # IBM4610_bot
 
+Telegram bot and Windows scripts to automatically print text messages in Telegram on an IBM SureMark receipt printer.
+
 ## Basic Setup
 
 Linux machine running Windows XP (32 bit) in a VM, with a shared folder (`Z:\ in Windows`).
