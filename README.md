@@ -50,3 +50,16 @@ Not necessarily in the correct order
 * Execute `C:\print_poller\print_contents.bat` when Windows starts.
 
 * Execute `~/path/to/shared/folder/telegram_bot/sure_mark.py` when Linux starts.
+
+## Installing Linux on the tablet
+The Lamina tablet uses a cheap Atom-chipset that doesn't support the regular 64 bit EFI bootfiles.
+This is the case for many of these no-name Chinese Windows tablets from the Windows 8 launch era.
+Therefore, it is necessary to use a standalone GRUB IA32 EFI file to chainload the Linux installer.
+
+See the Arch Wiki for details: https://wiki.archlinux.org/index.php/Unified_Extensible_Firmware_Interface#Booting_64-bit_kernel_on_32-bit_UEFI
+
+
+## Notes
+I don't own any rights to the IBM driver. Consider it abandonware.
+
+
