@@ -49,7 +49,7 @@ Not necessarily in the correct order
 
 * Place `suremark_tg_bot` in `/usr/bin/`, and `chmod 755` it.
 
-* Place the `*.service` files in `/etc/systemd/system` and enable them.
+* Place the `*.service` files in `/etc/systemd/system` and enable them. The VM service is enabled with `sudo systemctl enable vboxvmservice@VM_UUID.service`.
 
 ## Installing Linux on the tablet
 The Lamina tablet uses a cheap Atom-chipset that doesn't support the regular 64 bit EFI bootfiles.
