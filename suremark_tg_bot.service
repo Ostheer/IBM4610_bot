@@ -1,0 +1,12 @@
+[Unit]
+Description=Telegram bot in Python to automatically print messages on an IBM SureMark 4610 receipt printer.
+Requires=systemd-modules-load.service
+After=systemd-modules-load.service network-online.target
+Wants=network-online.target
+
+[Service]
+User=ostheer
+ExecStart=/usr/bin/suremark_tg_bot
+
+[Install]
+WantedBy=multi-user.target

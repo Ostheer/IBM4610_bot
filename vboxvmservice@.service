@@ -1,0 +1,14 @@
+[Unit]
+Description=VBox Virtual Machine %i Service
+Requires=systemd-modules-load.service
+After=systemd-modules-load.service network-online.target
+Wants=network-online.target
+
+[Service]
+User=ostheer
+Group=vboxusers
+ExecStart=/usr/bin/VBoxHeadless -s %i
+ExecStop=/usr/bin/VBoxManage controlvm %i acpipowerbutton
+
+[Install]
+WantedBy=multi-user.target
