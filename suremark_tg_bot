@@ -29,6 +29,7 @@ dispatcher.add_handler(start_handler)
 echo_handler = MessageHandler(Filters.text, echo)
 dispatcher.add_handler(echo_handler)
 
+attempts = 0
 try:
     updater.start_polling()
 except telegram.error.NetworkError:
