@@ -2,6 +2,15 @@
 
 Telegram bot and Windows scripts to automatically print text messages in Telegram on an IBM SureMark receipt printer.
 
+I had an old crappy Windows Tablet lying around collecting dust, so I repurposed it.
+
+Now it's a crappy tablet printing Word 2003 documents via Telegram Running Windows XP via Virtualbox in OpenBox on Arch Linux!
+
+
+| The printer | The tablet |
+|------------|-------------|
+| ![IBM Printer](readme_images/SureMark.png) | ![Lamina Tablet](readme_images/Lamina.jpg) |
+
 ## Basic Setup
 
 Linux machine running Windows XP (32 bit) in a VM, with a shared folder (`Z:\ in Windows`).
@@ -11,6 +20,7 @@ Whenever the user sends a text message, it creates a file `to_print.txt` in the 
 
 The batch script `print_contents.bat` polls the folder every 500ms.
 If it encounters `to_print.txt`, it starts Microsoft Word 2003 using a specific macro (`macro.vba`).
+
 The macro reads the `to_print.txt` file and appends it to `empty_receipt.doc`.
 The macro then prints the document, suppressing any errors.
 Lastly it deletes the file and terminates Word.
