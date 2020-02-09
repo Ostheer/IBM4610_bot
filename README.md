@@ -1,6 +1,7 @@
 # IBM4610_bot
 
 Telegram bot and Windows scripts to automatically print text messages in Telegram on an IBM SureMark receipt printer.
+This version of the SureMark 4610 unfortunately only has USB and a proprietary protocol, so it doesn't work natively on Linux. Therefore, the only way to get it to print anything is using some windows 32-bit executable.
 
 I had an old crappy Windows Tablet lying around collecting dust, so I repurposed it.
 
@@ -28,6 +29,11 @@ Lastly it deletes the file and terminates Word.
 The script `macro.vba` is embedded in the base template of the Microsoft Office installation, so the file is not necessarily present on the system.
 
 ## Instructions
+Not necessarily in the correct order
+
+* Install Windows XP and Office 2003 in the VM
+
+* Install the IBM printer driver, and make it the default printer
 
 * Embed the macro in Word by opening Word, pressing `Alt`+`F11` and pasting the code in a new script file.
 
@@ -43,4 +49,4 @@ The script `macro.vba` is embedded in the base template of the Microsoft Office 
 
 * Execute `C:\print_poller\print_contents.bat` when Windows starts.
 
-* Execute `~/path/to/shared/folder/sure_mark.py` when Linux starts.
+* Execute `~/path/to/shared/folder/telegram_bot/sure_mark.py` when Linux starts.
