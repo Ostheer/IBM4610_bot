@@ -3,7 +3,7 @@ from telegram.ext import CommandHandler
 from telegram.ext import MessageHandler, Filters
 import logging
 
-updater = Updater(token="895077791:AAGVXZvjzPjulYwpJ7pyeBv1LOWcDWByf10", use_context=True)
+updater = Updater(token="895077791:AAGVXZvjzPjulYwpJ7pyeBv1LOWcDWByf10", use_context=True) #Don't worry, the key is invalid.
 dispatcher = updater.dispatcher
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
