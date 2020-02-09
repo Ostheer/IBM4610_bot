@@ -1,20 +1,25 @@
+#!/bin/python
 from telegram.ext import Updater
 from telegram.ext import CommandHandler
 from telegram.ext import MessageHandler, Filters
 import logging
 
-updater = Updater(token="895077791:AAGVXZvjzPjulYwpJ7pyeBv1LOWcDWByf10", use_context=True) #Don't worry, the key is invalid.
+import os
+import time
+
+updater = Updater(token="895077791:AAFoG8vrbM_TRwJz9YehzMk6djckhXEsI_U", use_context=True)
 dispatcher = updater.dispatcher
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
 
+SHARED_DIR = r'/home/ostheer/VirtualBox VMs/Windows XP/shared/telegram_bot/'
 
 def start(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id, text="I'm a bot, please talk to me!")
 
 def echo(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id, text="Okay, printing...")
-    with open("to_print.txt", "w") as file:
+    with open(SHARED_DIR + "to_print.txt", "w") as file:
         file.write(update.message.text)
 
 
@@ -24,5 +29,11 @@ dispatcher.add_handler(start_handler)
 echo_handler = MessageHandler(Filters.text, echo)
 dispatcher.add_handler(echo_handler)
 
-
-updater.start_polling()
+try:
+    updater.start_polling()
+except telegram.error.NetworkError:
+    if attempts == 5:
+        os._exit(1)
+    time.sleep(10)
+    attempts = attempts + 1
+    pass
