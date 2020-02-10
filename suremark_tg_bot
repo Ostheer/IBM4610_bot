@@ -80,7 +80,7 @@ def echo(update, context):
     elif str(update.effective_chat.id) in config["USERS"]["allowed"].split(','):
         context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["print_started"])
         ibm_print(update.message.text)
-        context.bot.send_message(chat_id=config["USERS"]["admin"], text=str(update.effective_chat.first_name) + config["LANG"]["print_received"])
+        context.bot.send_message(chat_id=config["USERS"]["admin"], text=str(update.effective_chat.first_name) + " " + config["LANG"]["print_received"])
     
     #Blocked user
     elif  str(update.effective_chat.id) in config["USERS"]["blocked"].split(','):
