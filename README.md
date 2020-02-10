@@ -28,6 +28,14 @@ Lastly it deletes the file and terminates Word.
 
 The script `macro.vba` is embedded in the base template of the Microsoft Office installation, so the file is not necessarily present on the system.
 
+## TODO
+* Add support for images
+* Add support for stickers
+* Allow admin to remove users from allow/block list
+* Implement schedule for working times. Notify users when printer is not connected/offline
+* Fix special characters/diacritics problem
+* Use built-in camera to send gif/picture of printed receipt to user
+
 ## Instructions
 Not necessarily in the correct order
 
