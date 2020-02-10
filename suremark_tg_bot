@@ -64,6 +64,7 @@ def echo(update, context):
             config["USERS"]["allowed"] += "," + update.message.text
             with open(configfile, 'w') as f:
                 config.write(f)
+            context.bot.send_message(chat_id=update.message.text, text=config["LANG"]["register_granted"])
             context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_allow_success"])
             chat_state = 'normal'
 
@@ -71,6 +72,7 @@ def echo(update, context):
             config["USERS"]["blocked"] += "," + update.message.text
             with open(configfile, 'w') as f:
                 config.write(f)
+            context.bot.send_message(chat_id=update.message.text, text=config["LANG"]["register_denied"])
             context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_block_success"])
             chat_state = 'normal'
 
