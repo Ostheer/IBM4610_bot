@@ -5,7 +5,7 @@ This version of the SureMark 4610 unfortunately only has USB and a proprietary p
 
 I had an old crappy Windows Tablet lying around collecting dust, so I repurposed it.
 
-Now it's a crappy tablet printing Word 2003 documents via Telegram Running Windows XP via Virtualbox in OpenBox on Arch Linux!
+Now it's a crappy tablet printing Word 2003 documents via Telegram Running Windows XP in Virtualbox on Arch Linux!
 
 
 | The printer | The tablet |
@@ -33,7 +33,7 @@ The script `macro.vba` is embedded in the base template of the Microsoft Office 
 * Add support for stickers
 * Implement schedule for working times. Notify users when printer is not connected/offline
 * Fix special characters/diacritics problem
-* Use built-in camera to send gif/picture of printed receipt to user
+* Implement database to allow per-user settings and quota
 
 ## Instructions
 Not necessarily in the correct order
