@@ -22,6 +22,10 @@ def ibm_print(thing):
     with open(config["CONFIG"]["SHARED_DIR"] + "to_print.txt", "w") as file:
         file.write(thing)
 
+def start(update, context):
+    context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["start_reply"])
+    context.bot.send_message(chat_id=config["USERS"]["admin"], text=str(update.effective_chat.first_name)+" (ID "+str(update.effective_chat.id)+") " + config["LANG"]["start_request"])
+
 def register_cancel(update, context):
     global chat_state
     if str(update.effective_chat.id) == config["USERS"]["admin"]:
@@ -35,7 +39,7 @@ def register_user(update, context):
     global chat_state
     if str(update.effective_chat.id) == config["USERS"]["admin"]:
         chat_state = 'register'
-        custom_keyboard = [[config["LANG"]["register_allow"]], [config["LANG"]["register_block"]]]
+        custom_keyboard = [[config["LANG"]["register_allow"]], [config["LANG"]["register_block"]], [config["LANG"]["register_remove"]]]
         reply_markup = telegram.ReplyKeyboardMarkup(custom_keyboard)
         context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_how"], reply_markup=reply_markup)
     else:
@@ -52,29 +56,62 @@ def echo(update, context):
             ibm_print(update.message.text)
     
         elif chat_state == 'register':
+            reply_markup = telegram.ReplyKeyboardRemove()
             if update.message.text == config["LANG"]["register_allow"]:
+                context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_allow_who"], reply_markup=reply_markup)
                 chat_state = 'register_allow'
             elif update.message.text == config["LANG"]["register_block"]:
+                context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_block_who"], reply_markup=reply_markup)
                 chat_state = 'register_block'
+            elif update.message.text == config["LANG"]["register_remove"]:
+                context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_remove_who"], reply_markup=reply_markup)
+                chat_state = 'register_remove'
 
-            reply_markup = telegram.ReplyKeyboardRemove()
-            context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_who"], reply_markup=reply_markup)
-    
         elif chat_state == 'register_allow':
-            config["USERS"]["allowed"] += "," + update.message.text
-            with open(configfile, 'w') as f:
-                config.write(f)
-            context.bot.send_message(chat_id=update.message.text, text=config["LANG"]["register_granted"])
-            context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_allow_success"])
-            chat_state = 'normal'
+            try:
+                context.bot.send_message(chat_id=update.message.text, text=config["LANG"]["register_granted"])
+                config["USERS"]["allowed"] += "," + update.message.text
+                with open(configfile, 'w') as f:
+                    config.write(f)
+                context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_allow_success"])
+            except telegram.error.BadRequest:
+                context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_allow_invalid_id"])
+            except:
+                context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_allow_failed"])
+            finally:
+                chat_state = 'normal'
 
         elif chat_state == 'register_block':
-            config["USERS"]["blocked"] += "," + update.message.text
-            with open(configfile, 'w') as f:
-                config.write(f)
-            context.bot.send_message(chat_id=update.message.text, text=config["LANG"]["register_denied"])
-            context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_block_success"])
-            chat_state = 'normal'
+            try:
+                context.bot.send_message(chat_id=update.message.text, text=config["LANG"]["register_denied"])
+                config["USERS"]["blocked"] += "," + update.message.text
+                with open(configfile, 'w') as f:
+                    config.write(f)
+                context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_block_success"])
+            except telegram.error.BadRequest:
+                context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_block_invalid_id"])
+            except:
+                context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_block_failed"])
+            finally:
+                chat_state = 'normal'
+
+        elif chat_state == 'register_remove':
+            try:
+                config["USERS"]["blocked"] = config["USERS"]["blocked"].replace(update.message.text, "")
+                config["USERS"]["allowed"] = config["USERS"]["allowed"].replace(update.message.text, "")
+
+                while ",," in config["USERS"]["allowed"]:
+                    config["USERS"]["allowed"] = config["USERS"]["allowed"].replace(",,",",")
+                while ",," in config["USERS"]["blocked"]:
+                    config["USERS"]["blocked"] = config["USERS"]["blocked"].replace(",,",",")
+
+                with open(configfile, 'w') as f:
+                    config.write(f)
+                context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_remove_success"])
+            except:
+                context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_remove_failed"])
+            finally:
+                chat_state = 'normal'
 
     #Whitelisted user
     elif str(update.effective_chat.id) in config["USERS"]["allowed"].split(','):
@@ -92,6 +129,9 @@ def echo(update, context):
         context.bot.send_message(chat_id=config["USERS"]["admin"], text=str(update.effective_chat.first_name)+" (ID "+str(update.effective_chat.id)+") " + config["LANG"]["print_attempt"])
         context.bot.send_message(chat_id=config["USERS"]["admin"], text=update.message.text)
 
+start_handler = CommandHandler('start', start)
+dispatcher.add_handler(start_handler)
+
 register_cancel_handler = CommandHandler('cancel', register_cancel)
 dispatcher.add_handler(register_cancel_handler)
 
@@ -101,7 +141,6 @@ dispatcher.add_handler(register_handler)
 echo_handler = MessageHandler(Filters.text, echo)
 dispatcher.add_handler(echo_handler)
 
-config.read(configfile)
 attempts = 0
 try:
     updater.start_polling()
