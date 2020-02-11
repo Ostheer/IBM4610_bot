@@ -3,13 +3,13 @@ Sub appendPrintCloseDelete()
 
     'Add the text from the file
     On Error GoTo ErrHandler1:
-        Open myFile For Input As #1
-        Do Until EOF(1)
-            Line Input #1, textline
-            Text = Text & textline & vbNewLine
-        Loop
-        Close #1
-        ActiveDocument.Content.InsertAfter Text:=Text
+        Dim objStream, strData
+        Set objStream = CreateObject("ADODB.Stream")
+        objStream.Charset = "utf-8"
+        objStream.Open
+        objStream.LoadFromFile (myFile)
+        strData = objStream.ReadText()
+        ActiveDocument.Content.InsertAfter Text:=strData
         
     'Print the file without margins warning
     With Application
