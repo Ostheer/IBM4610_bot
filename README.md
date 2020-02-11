@@ -32,7 +32,6 @@ The script `macro.vba` is embedded in the base template of the Microsoft Office 
 * Add support for images
 * Add support for stickers
 * Implement schedule for working times. Notify users when printer is not connected/offline
-* Fix special characters/diacritics problem
 * Implement database to allow per-user settings and quota
 * Add automatic services. Printing reddit posts, weather.. Perhaps via RSS
 
@@ -59,6 +58,8 @@ Not necessarily in the correct order
 
 * Place the `*.service` files in `/etc/systemd/system` and enable them. The VM service is enabled with `sudo systemctl enable vboxvmservice@VM_UUID.service`.
 * Use `setterm --blank `{`force` or `poke`}` --term linux </dev/tty1` to turn off the screen
+
+* For unicode support it may be necessary to enable *Microsoft Scripting Runtime* in `Microsoft Visual Basic>Tools>References`
 
 ## Installing Linux on the tablet
 The Lamina tablet uses a cheap Atom-chipset that doesn't support the regular 64 bit EFI bootfiles.
