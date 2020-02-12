@@ -34,6 +34,7 @@ The script `macro.vba` is embedded in the base template of the Microsoft Office 
 * Implement schedule for working times. Notify users when printer is not connected/offline
 * Implement database to allow per-user settings and quota
 * Add automatic services. Printing reddit posts, weather.. Perhaps via RSS
+* Support automatic switching of USB mode (host or power) by using the audio output
 
 ## Instructions
 Not necessarily in the correct order
