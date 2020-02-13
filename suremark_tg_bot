@@ -17,14 +17,31 @@ config.read(configfile)
 updater = Updater(token=config["CONFIG"]["key"], use_context=True)
 dispatcher = updater.dispatcher
 
+def print_text_raw(text, fullname):
+    with open(fullname, "w") as file:
+        file.write(text)
 
-def ibm_print(thing):
-    with open(config["CONFIG"]["SHARED_DIR"] + "to_print.txt", "w") as file:
-        file.write(thing)
+def ibm_print(thing, caption=False):
+    if type(thing) == str and caption == False:
+        N = sum([(f.split('.')[-1]=='txt') and ('to_print' in f.split('.')[0]) for f in os.listdir(config["CONFIG"]["SHARED_DIR"])])
+        print_text_raw(thing, config["CONFIG"]["SHARED_DIR"] + "to_print" + str(N) + ".txt")
+    elif caption == True:
+        N = sum([(f.split('.')[-1]=='caption') and ('to_print' in f.split('.')[0]) for f in os.listdir(config["CONFIG"]["SHARED_DIR"])])
+        if type(thing) == str:
+            print_text_raw(thing, config["CONFIG"]["SHARED_DIR"] + "to_print" + str(N) + ".caption")
+        elif type(thing) == None:
+            print_text_raw("", config["CONFIG"]["SHARED_DIR"] + "to_print" + str(N) + ".caption")
+    elif type(thing) == telegram.files.file.File:
+        N = sum([(f.split('.')[-1]=='jpg') and ('to_print' in f.split('.')[0]) for f in os.listdir(config["CONFIG"]["SHARED_DIR"])])
+        thing.download(config["CONFIG"]["SHARED_DIR"] + "to_print" + str(N) + ".jpg")
 
 def start(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["start_reply"])
     context.bot.send_message(chat_id=config["USERS"]["admin"], text=str(update.effective_chat.first_name)+" (ID "+str(update.effective_chat.id)+") " + config["LANG"]["start_request"])
+
+def photo_handler(update, context):
+    #TODO: Figure out if I can make the dispatcher filter for text AND photos
+    echo(update, context)
 
 def register_cancel(update, context):
     global chat_state
@@ -52,8 +69,14 @@ def echo(update, context):
     #Admin user
     if str(update.effective_chat.id) == config["USERS"]["admin"]:
         if chat_state == 'normal':
-            context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["print_started"])
+            try:
+                newFile = context.bot.get_file(update.message.photo[-1].file_id)
+                ibm_print(update.message.caption, caption=True)
+                ibm_print(newFile)
+            except IndexError:
+                pass
             ibm_print(update.message.text)
+            context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["print_started"])
     
         elif chat_state == 'register':
             reply_markup = telegram.ReplyKeyboardRemove()
@@ -115,8 +138,14 @@ def echo(update, context):
 
     #Whitelisted user
     elif str(update.effective_chat.id) in config["USERS"]["allowed"].split(','):
-        context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["print_started"])
+        try:
+            newFile = context.bot.get_file(update.message.photo[-1].file_id)
+            ibm_print(update.message.caption, caption=True)
+            ibm_print(newFile)
+        except IndexError:
+            pass
         ibm_print(update.message.text)
+        context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["print_started"])
         context.bot.send_message(chat_id=config["USERS"]["admin"], text=str(update.effective_chat.first_name) + " " + config["LANG"]["print_received"])
     
     #Blocked user
@@ -140,6 +169,8 @@ dispatcher.add_handler(register_handler)
 
 echo_handler = MessageHandler(Filters.text, echo)
 dispatcher.add_handler(echo_handler)
+
+dispatcher.add_handler(MessageHandler(Filters.photo, photo_handler))
 
 attempts = 0
 try:
