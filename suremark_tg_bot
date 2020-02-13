@@ -29,7 +29,7 @@ def ibm_print(thing, caption=False):
         N = sum([(f.split('.')[-1]=='caption') and ('to_print' in f.split('.')[0]) for f in os.listdir(config["CONFIG"]["SHARED_DIR"])])
         if type(thing) == str:
             print_text_raw(thing, config["CONFIG"]["SHARED_DIR"] + "to_print" + str(N) + ".caption")
-        elif type(thing) == None:
+        elif thing == None:
             print_text_raw("", config["CONFIG"]["SHARED_DIR"] + "to_print" + str(N) + ".caption")
     elif type(thing) == telegram.files.file.File:
         N = sum([(f.split('.')[-1]=='jpg') and ('to_print' in f.split('.')[0]) for f in os.listdir(config["CONFIG"]["SHARED_DIR"])])
