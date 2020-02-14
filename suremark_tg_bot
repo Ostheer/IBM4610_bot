@@ -43,7 +43,6 @@ def print_imag_raw(image, fullname):
     im = Image.fromarray(bitmap.astype(np.uint8))
 
     im.save(fullname.replace('jpg','bmp'))
-    os.remove(fullname)
 
 def Nsuffix(path, prefix, extension):
     N = 0
