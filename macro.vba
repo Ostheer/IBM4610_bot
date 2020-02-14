@@ -1,8 +1,5 @@
 Sub appendPrintCloseDelete()
     myPath = "Z:\telegram_bot\"
-    myText = "Z:\telegram_bot\to_print*.txt"
-    myPicture = "Z:\telegram_bot\to_print*.jpg"
-    myCaption = "Z:\telegram_bot\to_print*.caption"
     
     'Scan for text files
     myFile = Dir(myPath & "to_print*.txt")
