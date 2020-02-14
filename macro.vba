@@ -12,6 +12,7 @@ Sub appendPrintCloseDelete()
 
     'Scan for images
     myFile = Dir(myPath & "to_print*.bmp")
+    myFile_src = Replace(myFile, ".bmp", ".jpg")
     myCaption = Replace(myFile, ".bmp", ".caption")
     If Len(myFile) > 0 Then
         add_imag myPath & myFile
@@ -20,6 +21,7 @@ Sub appendPrintCloseDelete()
         print_now
         On Error GoTo CloseProgram:
             Kill myPath & myFile
+            Kill myPath & myFile_src
             Kill myPath & myCaption
     End If
 
