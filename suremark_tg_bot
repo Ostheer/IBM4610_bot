@@ -7,6 +7,8 @@ import logging
 import configparser
 import os
 import time
+from PIL import Image
+import numpy as np
 
 configfile = "/home/ostheer/.suremark_tg_bot.ini"
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
@@ -21,19 +23,49 @@ def print_text_raw(text, fullname):
     with open(fullname, "w") as file:
         file.write(text)
 
+def print_imag_raw(image, fullname):
+    image.download(fullname)
+    
+    img = Image.open(fullname)
+    ary = np.array(img)
+    
+    # Split the three channels
+    r,g,b = np.split(ary,3,axis=2)
+    r=r.reshape(-1)
+    g=r.reshape(-1)
+    b=r.reshape(-1)
+    
+    # Standard RGB to grayscale 
+    bitmap = list(map(lambda x: 0.299*x[0]+0.587*x[1]+0.114*x[2], 
+    zip(r,g,b)))
+    bitmap = np.array(bitmap).reshape([ary.shape[0], ary.shape[1]])
+    bitmap = np.dot((bitmap > 128).astype(float),255)
+    im = Image.fromarray(bitmap.astype(np.uint8))
+
+    im.save(fullname.replace('jpg','bmp'))
+    os.remove(fullname)
+
+def Nsuffix(path, prefix, extension):
+    N = 0
+    files = os.listdir(path)
+    for f in files:
+        if extension in f and prefix in f:
+            N = max(N, int(f.split('.'+extension)[0].split(prefix)[-1]))
+    return N+1
+
 def ibm_print(thing, caption=False):
     if type(thing) == str and caption == False:
-        N = sum([(f.split('.')[-1]=='txt') and ('to_print' in f.split('.')[0]) for f in os.listdir(config["CONFIG"]["SHARED_DIR"])])
+        N = Nsuffix(config["CONFIG"]["SHARED_DIR"], 'to_print', 'txt')
         print_text_raw(thing, config["CONFIG"]["SHARED_DIR"] + "to_print" + str(N) + ".txt")
     elif caption == True:
-        N = sum([(f.split('.')[-1]=='caption') and ('to_print' in f.split('.')[0]) for f in os.listdir(config["CONFIG"]["SHARED_DIR"])])
+        N = Nsuffix(config["CONFIG"]["SHARED_DIR"], 'to_print', 'caption')
         if type(thing) == str:
             print_text_raw(thing, config["CONFIG"]["SHARED_DIR"] + "to_print" + str(N) + ".caption")
         elif thing == None:
             print_text_raw("", config["CONFIG"]["SHARED_DIR"] + "to_print" + str(N) + ".caption")
     elif type(thing) == telegram.files.file.File:
-        N = sum([(f.split('.')[-1]=='jpg') and ('to_print' in f.split('.')[0]) for f in os.listdir(config["CONFIG"]["SHARED_DIR"])])
-        thing.download(config["CONFIG"]["SHARED_DIR"] + "to_print" + str(N) + ".jpg")
+        N = Nsuffix(config["CONFIG"]["SHARED_DIR"], 'to_print', 'jpg')
+        print_imag_raw(thing, config["CONFIG"]["SHARED_DIR"] + "to_print" + str(N) + ".jpg")
 
 def start(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["start_reply"])
@@ -70,7 +102,7 @@ def echo(update, context):
     if str(update.effective_chat.id) == config["USERS"]["admin"]:
         if chat_state == 'normal':
             try:
-                newFile = context.bot.get_file(update.message.photo[-1].file_id)
+                newFile = context.bot.get_file(update.message.photo[0].file_id)
                 ibm_print(update.message.caption, caption=True)
                 ibm_print(newFile)
             except IndexError:
@@ -139,7 +171,7 @@ def echo(update, context):
     #Whitelisted user
     elif str(update.effective_chat.id) in config["USERS"]["allowed"].split(','):
         try:
-            newFile = context.bot.get_file(update.message.photo[-1].file_id)
+            newFile = context.bot.get_file(update.message.photo[0].file_id)
             ibm_print(update.message.caption, caption=True)
             ibm_print(newFile)
         except IndexError:

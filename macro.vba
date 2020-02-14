@@ -1,7 +1,37 @@
 Sub appendPrintCloseDelete()
-    myFile = "Z:\telegram_bot\to_print.txt"
+    myPath = "Z:\telegram_bot\"
+    myText = "Z:\telegram_bot\to_print*.txt"
+    myPicture = "Z:\telegram_bot\to_print*.jpg"
+    myCaption = "Z:\telegram_bot\to_print*.caption"
+    
+    'Scan for text files
+    myFile = Dir(myPath & "to_print*.txt")
+    If Len(myFile) > 0 Then
+        add_text myPath & myFile
+        print_now
+        On Error GoTo CloseProgram:
+            Kill myPath & myFile
+    End If
 
-    'Add the text from the file
+    'Scan for images
+    myFile = Dir(myPath & "to_print*.bmp")
+    myCaption = Replace(myFile, ".bmp", ".caption")
+    If Len(myFile) > 0 Then
+        add_imag myPath & myFile
+        ActiveDocument.Content.InsertAfter text:=vbNewLine
+        add_text myPath & myCaption
+        print_now
+        On Error GoTo CloseProgram:
+            Kill myPath & myFile
+            Kill myPath & myCaption
+    End If
+
+CloseProgram:
+    'Close document without saving
+    Application.Quit SaveChanges:=False
+End Sub
+
+Sub add_text(myFile)
     On Error GoTo ErrHandler1:
         Dim objStream, strData
         Set objStream = CreateObject("ADODB.Stream")
@@ -9,8 +39,19 @@ Sub appendPrintCloseDelete()
         objStream.Open
         objStream.LoadFromFile (myFile)
         strData = objStream.ReadText()
-        ActiveDocument.Content.InsertAfter Text:=strData
-        
+        ActiveDocument.Content.InsertAfter text:=strData
+ErrHandler1:
+    Exit Sub
+End Sub
+
+Sub add_imag(myFile)
+    On Error GoTo ErrHandler1:
+        Selection.InlineShapes.AddPicture FileName:=myFile, LinkToFile:=False, SaveWithDocument:=True
+ErrHandler1:
+        Exit Sub
+End Sub
+
+Sub print_now()
     'Print the file without margins warning
     With Application
         'Turn off DisplayAlerts
@@ -21,18 +62,4 @@ Sub appendPrintCloseDelete()
         'Turn on DisplayAlerts again
         .DisplayAlerts = wdAlertsAll
     End With
-    
-    'Delete the file
-    On Error GoTo ErrHandler1:
-        Kill myFile
-
-CloseProgram:
-    'Close document without saving
-    Application.Quit SaveChanges:=False
-
-    Exit Sub
-ErrHandler1:
-    'if file cannot be opened (not present)
-    MsgBox "er is iets foutgegaan"
-    GoTo CloseProgram
 End Sub
