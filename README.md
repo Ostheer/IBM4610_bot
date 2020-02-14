@@ -14,13 +14,13 @@ Now it's a crappy tablet printing Word 2003 documents via Telegram Running Windo
 
 ## Basic Setup
 
-Linux machine running Windows XP (32 bit) in a VM, with a shared folder (`Z:\ in Windows`).
+Linux machine running Windows XP (32 bit) in a VM, with a shared folder (`Z:\` in Windows).
 
 The Python telegram bot runs on Linux.
-Whenever the user sends a text message, it creates a file `to_print.txt` in a shared folder.
+Whenever the user sends a text message, it creates a file `to_printN.extension` in a shared folder.
 
 The batch script `print_contents.bat` polls the folder every 500ms.
-If it encounters `to_print.txt`, it starts Microsoft Word 2003 using a specific macro (`macro.vba`).
+If it encounters `to_printN.txt` or `to_printN.bmp`, it starts Microsoft Word 2003 using a specific macro (`macro.vba`).
 
 The macro reads the `to_print.txt` file and appends it to `empty_receipt.doc`.
 The macro then prints the document, suppressing any errors or warnings (about margins).
@@ -29,7 +29,6 @@ Lastly it deletes the file and terminates Word.
 The script `macro.vba` is embedded in the base template of the Microsoft Office installation, so the file is not necessarily present on the system.
 
 ## TODO
-* Add support for images
 * Add support for stickers
 * Implement schedule for working times. Notify users when printer is not connected/offline
 * Implement database to allow per-user settings and quota
