@@ -10,7 +10,7 @@ if exist "z:\telegram_bot\to_print*" (
 )
 
 
-ping 192.0.2.1 -n 1 -w 1000 >nul
+ping 192.0.2.1 -n 1 -w 500 >nul
 
 goto loop
 @pause
