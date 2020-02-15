@@ -20,13 +20,36 @@ The Python telegram bot runs on Linux.
 Whenever the user sends a text message, it creates a file `to_printN.extension` in a shared folder.
 
 The batch script `print_contents.bat` polls the folder every 500ms.
-If it encounters `to_printN.txt` or `to_printN.bmp`, it starts Microsoft Word 2003 using a specific macro (`macro.vba`).
+If it encounters `to_printN.{doc, txt, bmp}`, it starts Microsoft Word 2003 using a specific macro (`macro.vba`).
 
-The macro reads the `to_print.txt` file and appends it to `empty_receipt.doc`.
+The macro reads the `to_print*` file and opens it or appends it to `empty_receipt.doc`.
 The macro then prints the document, suppressing any errors or warnings (about margins).
 Lastly it deletes the file and terminates Word.
 
 The script `macro.vba` is embedded in the base template of the Microsoft Office installation, so the file is not necessarily present on the system.
+
+## Features
+* Manage list of blocked and allowed users from telegram, as admin.
+* Print unicode text.
+* Print images (with captions), automatically converted to black and white bitmaps.
+* Print Microsoft Office `.doc` files.
+* Request a template Microsoft Office `.doc` file with the correct paper size.
+* Get notified when you receive a fax.
+
+## Instructions
+Not necessarily in the correct order
+* Install Windows XP and Office 2003 in the VM
+* Install the IBM printer driver, and make it the default printer
+* Embed the macro in Word by opening Word, pressing `Alt`+`F11` and pasting the code in a new script file.
+* On Linux, install `pip`, and via that install `python-telegram-bot` and `pillow`.
+* Place `print_poller` and its content on `C:\`
+* Mount the VirtualBox shared folder on `Z:\`
+* Create the directory `Z:\telegram_bot`
+* Execute `C:\print_poller\print_contents.bat` when Windows starts (e.g. by placing a shortcut in `C:\Documents and Settings\Admin\Start Menu\Programs\Startup`).
+* Place `suremark_tg_bot` in `/usr/bin/`, and `chmod 755` it.
+* Place the `*.service` files in `/etc/systemd/system` and enable them. The VM service is enabled with `sudo systemctl enable vboxvmservice@VM_UUID.service`.
+* Use `setterm --blank `{`force` or `poke`}` --term linux </dev/tty1` to turn off the screen
+* For unicode support it may be necessary to enable *Microsoft Scripting Runtime* in `Microsoft Visual Basic>Tools>References`
 
 ## TODO
 * Add support for stickers
@@ -34,32 +57,6 @@ The script `macro.vba` is embedded in the base template of the Microsoft Office 
 * Implement database to allow per-user settings and quota
 * Add automatic services. Printing reddit posts, weather.. Perhaps via RSS
 * Support automatic switching of USB mode (host or power) by using the audio output
-
-## Instructions
-Not necessarily in the correct order
-
-* Install Windows XP and Office 2003 in the VM
-
-* Install the IBM printer driver, and make it the default printer
-
-* Embed the macro in Word by opening Word, pressing `Alt`+`F11` and pasting the code in a new script file.
-
-* On Linux, install `pip`, and via that install `python-telegram-bot` and `pillow`.
-
-* Place `print_poller` and its content on `C:\`
-
-* Mount the VirtualBox shared folder on `Z:\`
-
-* Create the directory `Z:\telegram_bot`
-
-* Execute `C:\print_poller\print_contents.bat` when Windows starts (e.g. by placing a shortcut in `C:\Documents and Settings\Admin\Start Menu\Programs\Startup`).
-
-* Place `suremark_tg_bot` in `/usr/bin/`, and `chmod 755` it.
-
-* Place the `*.service` files in `/etc/systemd/system` and enable them. The VM service is enabled with `sudo systemctl enable vboxvmservice@VM_UUID.service`.
-* Use `setterm --blank `{`force` or `poke`}` --term linux </dev/tty1` to turn off the screen
-
-* For unicode support it may be necessary to enable *Microsoft Scripting Runtime* in `Microsoft Visual Basic>Tools>References`
 
 ## Installing Linux on the tablet
 The Lamina tablet uses a cheap Atom-chipset that doesn't support the regular 64 bit EFI bootfiles.
