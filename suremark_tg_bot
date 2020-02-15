@@ -84,6 +84,13 @@ def start(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["start_reply"])
     context.bot.send_message(chat_id=config["USERS"]["admin"], text=str(update.effective_chat.first_name)+" (ID "+str(update.effective_chat.id)+") " + config["LANG"]["start_request"])
 
+def give_template(update, context):
+    if (str(update.effective_chat.id) == config["USERS"]["admin"]) or (str(update.effective_chat.id) in config["USERS"]["allowed"].split(',')):
+        context.bot.send_document(chat_id=update.effective_chat.id, document=open(config["CONFIG"]["template_doc"], 'rb'))
+        context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["template_doc_sent"])
+    else:
+        context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["unauthorized"])
+
 def photo_handler(update, context):
     echo(update, context)
 
@@ -223,6 +230,8 @@ def echo(update, context):
 start_handler = CommandHandler('start', start)
 dispatcher.add_handler(start_handler)
 
+dispatcher.add_handler(CommandHandler('template', give_template))
+
 register_cancel_handler = CommandHandler('cancel', register_cancel)
 dispatcher.add_handler(register_cancel_handler)
 
@@ -235,12 +244,11 @@ dispatcher.add_handler(echo_handler)
 dispatcher.add_handler(MessageHandler(Filters.photo, photo_handler))
 dispatcher.add_handler(MessageHandler(Filters.document, document_handler))
 
+
 attempts = 0
-try:
-    updater.start_polling()
-except telegram.error.NetworkError:
-    if attempts == 5:
-        os._exit(1)
-    time.sleep(10)
-    attempts = attempts + 1
-    pass
+while attempts < 5:
+    try:
+        updater.start_polling()
+    except telegram.error.NetworkError:
+        time.sleep(10)
+        attempts = attempts + 1
