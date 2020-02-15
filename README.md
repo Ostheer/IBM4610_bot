@@ -8,9 +8,9 @@ I had an old crappy Windows Tablet lying around collecting dust, so I repurposed
 Now it's a crappy tablet printing Word 2003 documents via Telegram Running Windows XP in Virtualbox on Arch Linux!
 
 
-| The printer | The tablet |
-|------------|-------------|
-| ![IBM Printer](readme_images/SureMark.png) | ![Lamina Tablet](readme_images/Lamina.jpg) |
+| The printer | The tablet | Samples |
+|------------|-------------|-------------|
+| ![IBM Printer](readme_images/SureMark.png) | ![Lamina Tablet](readme_images/Lamina.jpg) | ![Print Samples](readme_images/prints.jpg) |
 
 ## Basic Setup
 
