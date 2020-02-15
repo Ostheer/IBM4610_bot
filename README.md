@@ -50,6 +50,7 @@ Not necessarily in the correct order
 * Place the `*.service` files in `/etc/systemd/system` and enable them. The VM service is enabled with `sudo systemctl enable vboxvmservice@VM_UUID.service`.
 * Use `setterm --blank `{`force` or `poke`}` --term linux </dev/tty1` to turn off the screen
 * For unicode support it may be necessary to enable *Microsoft Scripting Runtime* in `Microsoft Visual Basic>Tools>References`
+* Uncheck *Cable Connected* in Virtualbox settings>Network to isolate the VM
 
 ## TODO
 * Add support for stickers
