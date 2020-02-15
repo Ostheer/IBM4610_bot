@@ -52,27 +52,66 @@ def Nsuffix(path, prefix, extension):
             N = max(N, int(f.split('.'+extension)[0].split(prefix)[-1]))
     return N+1
 
-def ibm_print(thing, caption=False):
-    if type(thing) == str and caption == False:
+def ibm_print(thing, doctype='text'):
+    if type(thing) == str and doctype == 'text':
         N = Nsuffix(config["CONFIG"]["SHARED_DIR"], 'to_print', 'txt')
         print_text_raw(thing, config["CONFIG"]["SHARED_DIR"] + "to_print" + str(N) + ".txt")
-    elif caption == True:
+        return 0
+
+    elif type(thing) == str and doctype == 'caption':
         N = Nsuffix(config["CONFIG"]["SHARED_DIR"], 'to_print', 'caption')
-        if type(thing) == str:
-            print_text_raw(thing, config["CONFIG"]["SHARED_DIR"] + "to_print" + str(N) + ".caption")
-        elif thing == None:
-            print_text_raw("", config["CONFIG"]["SHARED_DIR"] + "to_print" + str(N) + ".caption")
-    elif type(thing) == telegram.files.file.File:
+        print_text_raw(thing, config["CONFIG"]["SHARED_DIR"] + "to_print" + str(N) + ".caption")
+        return 0
+
+    elif thing == None and doctype == 'caption': #mock caption, to retain correct numbering
+        N = Nsuffix(config["CONFIG"]["SHARED_DIR"], 'to_print', 'caption')
+        print_text_raw("", config["CONFIG"]["SHARED_DIR"] + "to_print" + str(N) + ".caption")
+        return 0
+
+    elif type(thing) == telegram.files.file.File and doctype == 'photo':
         N = Nsuffix(config["CONFIG"]["SHARED_DIR"], 'to_print', 'jpg')
         print_imag_raw(thing, config["CONFIG"]["SHARED_DIR"] + "to_print" + str(N) + ".jpg")
+        return 0
+
+    elif type(thing) == telegram.files.file.File and doctype == 'doc':
+        N = Nsuffix(config["CONFIG"]["SHARED_DIR"], 'to_print', 'doc')
+        thing.download(config["CONFIG"]["SHARED_DIR"] + "to_print" + str(N) + ".doc")
+        return 0
+
+    return 1
 
 def start(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["start_reply"])
     context.bot.send_message(chat_id=config["USERS"]["admin"], text=str(update.effective_chat.first_name)+" (ID "+str(update.effective_chat.id)+") " + config["LANG"]["start_request"])
 
 def photo_handler(update, context):
-    #TODO: Figure out if I can make the dispatcher filter for text AND photos
     echo(update, context)
+
+def document_handler(update, context):
+    echo(update, context)
+
+def print_handler(update, context):
+    #Try printing a photo
+    try:
+        newFile = context.bot.get_file(update.message.photo[0].file_id)
+        ibm_print(update.message.caption, doctype='caption')
+        return ibm_print(newFile, doctype='photo')
+    except (IndexError, AttributeError):
+        pass
+    
+    #Try printing a document
+    try:
+        if update.message.document.file_name.split('.')[-1] == 'doc':
+            newFile = context.bot.get_file(update.message.document.file_id)
+            return ibm_print(newFile, doctype='doc')
+        else:
+            return 1
+    except (IndexError, AttributeError):
+        pass
+
+    #Try printing text
+    return ibm_print(update.message.text)
+
 
 def register_cancel(update, context):
     global chat_state
@@ -100,15 +139,11 @@ def echo(update, context):
     #Admin user
     if str(update.effective_chat.id) == config["USERS"]["admin"]:
         if chat_state == 'normal':
-            try:
-                newFile = context.bot.get_file(update.message.photo[0].file_id)
-                ibm_print(update.message.caption, caption=True)
-                ibm_print(newFile)
-            except IndexError:
-                pass
-            ibm_print(update.message.text)
-            context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["print_started"])
-    
+            if not print_handler(update, context):
+                context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["print_started"])
+            else:
+                context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["print_failed"])
+   
         elif chat_state == 'register':
             reply_markup = telegram.ReplyKeyboardRemove()
             if update.message.text == config["LANG"]["register_allow"]:
@@ -131,7 +166,7 @@ def echo(update, context):
             except telegram.error.BadRequest:
                 context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_allow_invalid_id"])
             except:
-                context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_allow_failed"])
+                context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["unknown_error"])
             finally:
                 chat_state = 'normal'
 
@@ -145,7 +180,7 @@ def echo(update, context):
             except telegram.error.BadRequest:
                 context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_block_invalid_id"])
             except:
-                context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_block_failed"])
+                context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["unknown_error"])
             finally:
                 chat_state = 'normal'
 
@@ -163,22 +198,18 @@ def echo(update, context):
                     config.write(f)
                 context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_remove_success"])
             except:
-                context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_remove_failed"])
+                context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["unknown_error"])
             finally:
                 chat_state = 'normal'
 
     #Whitelisted user
     elif str(update.effective_chat.id) in config["USERS"]["allowed"].split(','):
-        try:
-            newFile = context.bot.get_file(update.message.photo[0].file_id)
-            ibm_print(update.message.caption, caption=True)
-            ibm_print(newFile)
-        except IndexError:
-            pass
-        ibm_print(update.message.text)
-        context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["print_started"])
-        context.bot.send_message(chat_id=config["USERS"]["admin"], text=str(update.effective_chat.first_name) + " " + config["LANG"]["print_received"])
-    
+        if not print_handler(update, context):
+            context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["print_started"])
+            context.bot.send_message(chat_id=config["USERS"]["admin"], text=str(update.effective_chat.first_name) + " " + config["LANG"]["print_received"])
+        else:
+            context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["print_failed"])
+
     #Blocked user
     elif  str(update.effective_chat.id) in config["USERS"]["blocked"].split(','):
         context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["request_reply_blocked_user"])
@@ -202,6 +233,7 @@ echo_handler = MessageHandler(Filters.text, echo)
 dispatcher.add_handler(echo_handler)
 
 dispatcher.add_handler(MessageHandler(Filters.photo, photo_handler))
+dispatcher.add_handler(MessageHandler(Filters.document, document_handler))
 
 attempts = 0
 try:
