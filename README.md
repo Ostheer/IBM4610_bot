@@ -1,7 +1,7 @@
 # SnapFax: Making faxing trendy again (IBM4610_bot)
 
 Telegram bot and Windows scripts to automatically print text messages in Telegram on an IBM SureMark receipt printer.
-This version of the SureMark 4610 unfortunately only has USB and a proprietary protocol, so it doesn't work natively on Linux. Therefore, the only way to get it to print anything is using some windows 32-bit executable.
+This version of the SureMark 4610 unfortunately only has USB and a proprietary protocol, so it doesn't work natively on Linux. Therefore, the only way to get it to print anything is using some windows 16-bit executable.
 
 I had an old crappy Windows Tablet lying around collecting dust, so I repurposed it.
 
