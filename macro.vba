@@ -75,8 +75,7 @@ Sub print_now()
     With Application
         'Turn off DisplayAlerts
         .DisplayAlerts = wdAlertsNone
-        'Print document
-        'Background print must be turned off to prevent message
+        'Print document, Background print must be turned off to prevent message
         .PrintOut Background:=False
         'Turn on DisplayAlerts again
         .DisplayAlerts = wdAlertsAll
