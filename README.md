@@ -41,13 +41,13 @@ Not necessarily in the correct order
 * Install Windows XP and Office 2003 in the VM
 * Install the IBM printer driver, and make it the default printer
 * Embed the macro in Word by opening Word, pressing `Alt`+`F11` and pasting the code in a new script file.
-* On Linux, install `pip`, and via that install `python-telegram-bot` and `pillow`.
+* On Linux, install `pip`, and via that install `python-telegram-bot`, `numpy` and `pillow`.
 * Place `print_poller` and its content on `C:\`
 * Mount the VirtualBox shared folder on `Z:\`
 * Create the directory `Z:\telegram_bot`
 * Execute `C:\print_poller\print_contents.bat` when Windows starts (e.g. by placing a shortcut in `C:\Documents and Settings\Admin\Start Menu\Programs\Startup`).
 * Place `suremark_tg_bot` in `/usr/bin/`, and `chmod 755` it.
-* Place the `*.service` files in `/etc/systemd/system` and enable them. The VM service is enabled with `sudo systemctl enable vboxvmservice@VM_UUID.service`.
+* Edit the `*.service` files to include your linux username and place them in `/etc/systemd/system` and enable them. The VM service is enabled with `sudo systemctl enable vboxvmservice@VM_UUID.service`. You can get this UUID with `VBoxManage list vms`.
 * Use `setterm --blank `{`force` or `poke`}` --term linux </dev/tty1` to turn off the screen
 * For unicode support it may be necessary to enable *Microsoft Scripting Runtime* in `Microsoft Visual Basic>Tools>References`
 * Uncheck *Cable Connected* in Virtualbox settings>Network to isolate the VM
