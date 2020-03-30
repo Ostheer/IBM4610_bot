@@ -64,6 +64,12 @@ def ibm_print(thing, doctype='text'):
         thing.download(config["CONFIG"]["SHARED_DIR"] + "to_print" + str(N) + ".doc")
         return 0
 
+    elif type(thing) == telegram.files.file.File and doctype == 'docx':
+        N = Nsuffix(config["CONFIG"]["SHARED_DIR"], 'to_print', 'docx')
+        thing.download(config["CONFIG"]["SHARED_DIR"] + "to_print" + str(N) + ".docx")
+        return 0
+
+
     return 1
 
 def start(update, context):
@@ -97,6 +103,9 @@ def print_handler(update, context):
         if update.message.document.file_name.split('.')[-1] == 'doc':
             newFile = context.bot.get_file(update.message.document.file_id)
             return ibm_print(newFile, doctype='doc')
+        elif  update.message.document.file_name.split('.')[-1] == 'docx':
+            newFile = context.bot.get_file(update.message.document.file_id)
+            return ibm_print(newFile, doctype='docx')
         else:
             return 1
     except (IndexError, AttributeError):
