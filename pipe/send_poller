@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+while true
+do
+	scp /home/ostheer/.tg_bot_read_dir/toprint.txt lamina:VirtualBox\\\ VMs/Windows\\\ XP/shared/telegram_bot/to_print99.txt
+	rm /home/ostheer/.tg_bot_read_dir/toprint.txt
+	sleep .3
+done
