@@ -1,5 +1,5 @@
 # The Mark Pipe
-##If you want to be able to pipe any `stdout` to your printer, like `ls | mark`, do the following
+## If you want to be able to pipe any `stdout` to your printer, like `ls | mark`, do the following
 
 ### On the user's pc
 * Create a folder where temporary text file (and perhaps the other files) can be stored, such as `~/.tg_bot_read_dir`
