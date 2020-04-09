@@ -35,6 +35,10 @@ def print_imag_raw(image, fullname):
         for item in datas:
             if item[3] == 0:
                 newData.append((255, 255, 255, 0))
+            elif item[3] != 255:
+                R = item[3]/255
+                bc = 255 - item[3]
+                newData.append((int(R*item[0] + bc), int(R*item[1] + bc), int(R*item[2] + bc), 0))
             else:
                 newData.append(item)
         image_file.putdata(newData)
