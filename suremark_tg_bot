@@ -26,6 +26,19 @@ def print_text_raw(text, fullname):
 def print_imag_raw(image, fullname):
     image.download(fullname)
     image_file = Image.open(fullname) # open colour image
+
+    #transparency to white
+    if 'A' in image_file.getbands():
+        image_file = image_file.convert('RGBA')
+        datas = image_file.getdata()
+        newData = []
+        for item in datas:
+            if item[3] == 0:
+                newData.append((255, 255, 255, 0))
+            else:
+                newData.append(item)
+        image_file.putdata(newData)
+
     image_file = image_file.convert('1') # convert image to black and white
 
     image_file.save(fullname.replace('jpg','bmp'))
@@ -90,7 +103,15 @@ def document_handler(update, context):
     echo(update, context)
 
 def print_handler(update, context):
-    #Try printing a photo
+    #Try printing a sticker
+    try:
+        newFile = context.bot.get_file(update.message.sticker.file_id)
+        ibm_print(None, doctype='caption')
+        return ibm_print(newFile, doctype='photo')
+    except (AttributeError):
+        pass
+    
+   #Try printing a photo
     try:
         newFile = context.bot.get_file(update.message.photo[-1].file_id)
         ibm_print(update.message.caption, doctype='caption')
@@ -232,6 +253,9 @@ dispatcher.add_handler(register_cancel_handler)
 
 register_handler = CommandHandler('register', register_user)
 dispatcher.add_handler(register_handler)
+
+echo_handler2 = MessageHandler(Filters.sticker, echo)
+dispatcher.add_handler(echo_handler2)
 
 echo_handler = MessageHandler(Filters.text, echo)
 dispatcher.add_handler(echo_handler)
