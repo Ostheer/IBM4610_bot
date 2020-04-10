@@ -36,6 +36,9 @@ The script `macro.vba` is embedded in the base template of the Microsoft Office 
 * Request a template Microsoft Office `.doc` file with the correct paper size.
 * Get notified when you receive a fax.
 * Supports faxing stickers (with transparency)
+* Print superfast using a resident font, using the <F> (and </F>) tag
+* Print numbers as EAN-13 barcode using the <BAR> tag
+* Pipe any output from your terminal to the printer with `mark`!
 
 ## Instructions
 Not necessarily in the correct order
