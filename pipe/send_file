@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+# script folder
+sf=~/.tg_bot_read_dir/
+# SSH host
+host=lamina
+# remote folder (relative to remote home)
+rf=VirtualBox\\\ VMs/Windows\\\ XP/shared/telegram_bot/
+# remote filename base
+fb=to_print
+
+if [ -f "${sf}toprint.txt" ]; then
+	# check if remote file exists
+	i=99
+	while scp "${host}":"${rf}""${fb}""${i}".txt /dev/null
+	do
+		i=$((${i}+1))
+	done
+	# copy file
+	scp "${sf}toprint.txt" "${host}":"${rf}""${fb}""${i}".txt
+	rm "${sf}toprint.txt"
+fi

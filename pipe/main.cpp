@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <stdlib.h>
 
 using namespace std;
 
@@ -23,5 +24,6 @@ int main(){
 	
 	myfile << "</F>";
 	myfile.close();
+	system("/home/ostheer/.tg_bot_read_dir/send_file > /dev/null 2>&1 &");
 	return 0;
 }
