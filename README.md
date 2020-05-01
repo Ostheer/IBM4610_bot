@@ -35,6 +35,10 @@ The script `macro.vba` is embedded in the base template of the Microsoft Office 
 * Print Microsoft Office `.doc` files.
 * Request a template Microsoft Office `.doc` file with the correct paper size.
 * Get notified when you receive a fax.
+* Supports faxing stickers (with transparency)
+* Print superfast using a resident font, using the <F> (and </F>) tag
+* Print numbers as EAN-13 barcode using the <BAR> tag
+* Pipe any output from your terminal to the printer with `mark`!
 
 ## Instructions
 Not necessarily in the correct order
@@ -53,11 +57,9 @@ Not necessarily in the correct order
 * Uncheck *Cable Connected* in Virtualbox settings>Network to isolate the VM
 
 ## TODO
-* Add support for stickers
 * Implement schedule for working times. Notify users when printer is not connected/offline
 * Implement database to allow per-user settings and quota
 * Add automatic services. Printing reddit posts, weather.. Perhaps via RSS
-* Support automatic switching of USB mode (host or power) by using the audio output
 
 ## Installing Linux on the tablet
 The Lamina tablet uses a cheap Atom-chipset that doesn't support the regular 64 bit EFI bootfiles.
