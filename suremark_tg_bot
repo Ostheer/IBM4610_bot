@@ -192,6 +192,8 @@ def echo(update, context):
                 context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_allow_success"])
             except telegram.error.BadRequest:
                 context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_allow_invalid_id"])
+            except telegram.error.Unauthorized:
+                context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_unauthorized"])
             except:
                 context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["unknown_error"])
             finally:
@@ -206,6 +208,8 @@ def echo(update, context):
                 context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_block_success"])
             except telegram.error.BadRequest:
                 context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_block_invalid_id"])
+            except telegram.error.Unauthorized:
+                context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_unauthorized"])
             except:
                 context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["unknown_error"])
             finally:
