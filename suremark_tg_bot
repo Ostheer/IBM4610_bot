@@ -24,8 +24,8 @@ def print_text_raw(text, fullname):
         file.write(text)
 
 def print_imag_raw(image, fullname):
-    image.download(fullname)
-    image_file = Image.open(fullname) # open colour image
+    image.download(fullname+"temp")
+    image_file = Image.open(fullname+"temp") # open colour image
 
     #transparency to white
     if 'A' in image_file.getbands():
@@ -42,10 +42,18 @@ def print_imag_raw(image, fullname):
             else:
                 newData.append(item)
         image_file.putdata(newData)
-
+    
     image_file = image_file.convert('1') # convert image to black and white
-
-    image_file.save(fullname.replace('jpg','bmp'))
+    
+    finalname = fullname
+    if 'jpg' in finalname:
+        finalname = fullname.replace('jpg','bmp')
+    elif 'png' in finalname:
+        finalname = finalname.replace('png','bmp')
+    
+    image_file.save(finalname.replace('bmp','jpg'))#this is bullshit, but I don't feel like editing the Word macro over ssh+x to remove the line where it tries to remove this file. If it doesn't find the file, it doesn't remove the caption either. (in appendPrintCloseDelete)
+    image_file.save(finalname)
+    os.remove(fullname+"temp")
 
 def Nsuffix(path, prefix, extension):
     N = 0
@@ -55,27 +63,27 @@ def Nsuffix(path, prefix, extension):
             N = max(N, int(f.split('.'+extension)[0].split(prefix)[-1]))
     return N+1
 
-def ibm_print(thing, doctype='text'):
+def ibm_print(thing, doctype='text', caption=""):
+    if caption == None:
+        caption = ""
+        
     if type(thing) == str and doctype == 'text':
         N = Nsuffix(config["CONFIG"]["SHARED_DIR"], 'to_print', 'txt')
         print_text_raw(thing, config["CONFIG"]["SHARED_DIR"] + "to_print" + str(N) + ".txt")
         return 0
 
-    elif type(thing) == str and doctype == 'caption':
-        N = Nsuffix(config["CONFIG"]["SHARED_DIR"], 'to_print', 'caption')
-        print_text_raw(thing, config["CONFIG"]["SHARED_DIR"] + "to_print" + str(N) + ".caption")
-        return 0
-
-    elif thing == None and doctype == 'caption': #mock caption, to retain correct numbering
-        N = Nsuffix(config["CONFIG"]["SHARED_DIR"], 'to_print', 'caption')
-        print_text_raw("", config["CONFIG"]["SHARED_DIR"] + "to_print" + str(N) + ".caption")
-        return 0
-
     elif type(thing) == telegram.files.file.File and doctype == 'photo':
-        N = Nsuffix(config["CONFIG"]["SHARED_DIR"], 'to_print', 'jpg')
+        N = Nsuffix(config["CONFIG"]["SHARED_DIR"], 'to_print', 'bmp')
+        print_text_raw(caption, config["CONFIG"]["SHARED_DIR"] + "to_print" + str(N) + ".caption")
         print_imag_raw(thing, config["CONFIG"]["SHARED_DIR"] + "to_print" + str(N) + ".jpg")
         return 0
 
+    elif type(thing) == telegram.files.file.File and doctype == 'photofile':
+        N = Nsuffix(config["CONFIG"]["SHARED_DIR"], 'to_print', 'bmp')
+        print_text_raw(caption, config["CONFIG"]["SHARED_DIR"] + "to_print" + str(N) + ".caption")
+        print_imag_raw(thing, config["CONFIG"]["SHARED_DIR"] + "to_print" + str(N) + ".png")
+        return 0
+    
     elif type(thing) == telegram.files.file.File and doctype == 'doc':
         N = Nsuffix(config["CONFIG"]["SHARED_DIR"], 'to_print', 'doc')
         thing.download(config["CONFIG"]["SHARED_DIR"] + "to_print" + str(N) + ".doc")
@@ -85,7 +93,6 @@ def ibm_print(thing, doctype='text'):
         N = Nsuffix(config["CONFIG"]["SHARED_DIR"], 'to_print', 'docx')
         thing.download(config["CONFIG"]["SHARED_DIR"] + "to_print" + str(N) + ".docx")
         return 0
-
 
     return 1
 
@@ -110,7 +117,7 @@ def print_handler(update, context):
     #Try printing a sticker
     try:
         newFile = context.bot.get_file(update.message.sticker.file_id)
-        ibm_print(None, doctype='caption')
+        #ibm_print(None, doctype='caption')
         return ibm_print(newFile, doctype='photo')
     except (AttributeError):
         pass
@@ -118,11 +125,11 @@ def print_handler(update, context):
    #Try printing a photo
     try:
         newFile = context.bot.get_file(update.message.photo[-1].file_id)
-        ibm_print(update.message.caption, doctype='caption')
-        return ibm_print(newFile, doctype='photo')
+        #ibm_print(update.message.caption, doctype='caption')
+        return ibm_print(newFile, doctype='photo', caption=update.message.caption)
     except (IndexError, AttributeError):
         pass
-    
+
     #Try printing a document
     try:
         if update.message.document.file_name.split('.')[-1] == 'doc':
@@ -131,6 +138,9 @@ def print_handler(update, context):
         elif  update.message.document.file_name.split('.')[-1] == 'docx':
             newFile = context.bot.get_file(update.message.document.file_id)
             return ibm_print(newFile, doctype='docx')
+        elif  update.message.document.file_name.split('.')[-1] == 'png':
+            newFile = context.bot.get_file(update.message.document.file_id)
+            return ibm_print(newFile, doctype='photofile')
         else:
             return 1
     except (IndexError, AttributeError):
