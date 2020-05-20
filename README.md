@@ -40,7 +40,7 @@ The script `macro.vba` is embedded in the base template of the Microsoft Office 
 * Print numbers as EAN-13 barcode using the <BAR> tag
 * Pipe any output from your terminal to the printer with `mark`!
 * Print png files without compression, ideal for extreme aspect ratios!
-* Using [Willus' excellent pdf reflower](https://duckduckgo.com/?t=ffab&q=pdfopt&atb=v210-1&ia=web) you can print any pdf, such as scientific publications. Just do `k2pdfopt input.pdf -w 400 -h 1620 -dpi 167 -idpi -2 && pdftoppm input_k2opt.pdf -r 250 out -png` and then send the resulting images to your bot (as files). Make sure you have `k2pdfopt` and `pdftoppm` in your path.
+* Using [Willus' excellent pdf reflower](https://www.willus.com/k2pdfopt/) you can print any pdf, such as scientific publications. Just do `k2pdfopt input.pdf -w 400 -h 1620 -dpi 167 -idpi -2 && pdftoppm input_k2opt.pdf -r 250 out -png` and then send the resulting images to your bot (as files). Make sure you have `k2pdfopt` and `pdftoppm` in your path.
 
 ## Instructions
 Not necessarily in the correct order
