@@ -10,6 +10,10 @@ import time
 from PIL import Image
 import numpy as np
 
+from docx import Document
+from docx.shared import Pt
+import emoji
+
 configfile = "/home/ostheer/.suremark_tg_bot.ini"
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 chat_state = 'normal'
@@ -19,9 +23,70 @@ config.read(configfile)
 updater = Updater(token=config["CONFIG"]["key"], use_context=True)
 dispatcher = updater.dispatcher
 
+#to complete the confusion, all .txt and .caption files are from now on actually .docx files.
 def print_text_raw(text, fullname):
-    with open(fullname, "w") as file:
-        file.write(text)
+    document = Document()
+    p = document.add_paragraph()
+    emojis = emoji.emoji_lis(text)
+    
+    if len(emojis) != 0:
+        Nemo = len(emojis)
+        Ntxt = len(text)
+        
+        #divide the text up into segments enclosed by emoji
+        segments = []
+        for i in range(Nemo):
+            if emojis[i]["location"] == 0:
+                #add emojus
+                segments.append((0, 1, True))
+                #add text following emojus
+                first = 1
+                try:
+                    last = emojis[i+1]["location"]
+                except IndexError:
+                    last = Ntxt
+                segments.append((first, last, False))
+                
+            elif emojis[i]["location"] == Ntxt-1:
+                #add text preceding first emojus
+                if i == 0:
+                    segments.append((0, emojis[i]["location"], False))
+                #add emojus
+                segments.append((Ntxt-1, Ntxt, True))
+                
+            else:
+                #add text preceding first emojus
+                if i == 0:
+                    segments.append((0, emojis[i]["location"], False))
+                #add emojus
+                segments.append((emojis[i]["location"], emojis[i]["location"]+1, True))
+                #add text following emojus
+                first = emojis[i]["location"]+1
+                try:
+                    last = emojis[i+1]["location"]
+                except IndexError:
+                    last = Ntxt
+                segments.append((first, last, False))
+        
+        #add all segments to the document
+        for seg in segments:
+            if seg[2]:
+                run = p.add_run(text[seg[0]:seg[1]])
+                run.font.size = Pt(10)
+                run.font.name = 'Segoe UI Emoji'#alternatively 'Twitter Color Emoji'
+            else:
+                run = p.add_run(text[seg[0]:seg[1]])
+                run.font.name = 'Courier New'
+                run.font.size = Pt(10)
+                run.bold = True
+                
+    else:
+        run = p.add_run(text)
+        run.font.name = 'Courier New'
+        run.font.size = Pt(10)
+        run.bold = True
+
+    document.save(fullname)
 
 def print_imag_raw(image, fullname):
     image.download(fullname+"temp")
