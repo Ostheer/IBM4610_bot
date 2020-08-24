@@ -1,11 +1,11 @@
-# SnapFax: Making faxing trendy again (IBM4610_bot)
+# 💯🔥SnapFax✅💯⚡️⚡️: Making faxing trendy again (IBM4610_bot)
 
 Telegram bot and Windows scripts to automatically print text messages in Telegram on an IBM SureMark receipt printer.
 This version of the SureMark 4610 unfortunately only has USB and a proprietary protocol, so it doesn't work natively on Linux. Therefore, the only way to get it to print anything is using some windows 16-bit executable.
 
 I had an old crappy Windows Tablet lying around collecting dust, so I repurposed it.
 
-Now it's a crappy tablet printing Word 2003 documents via Telegram Running Windows XP in Virtualbox on Arch Linux!
+Now it's a crappy tablet printing Word 2007 documents via Telegram Running Windows XP in Virtualbox on Arch Linux!
 
 
 | The printer | The tablet | Samples |
@@ -20,34 +20,34 @@ The Python telegram bot runs on Linux.
 Whenever the user sends a text message, it creates a file `to_printN.extension` in a shared folder.
 
 The batch script `print_contents.bat` polls the folder every 500ms.
-If it encounters `to_printN.{doc, txt, bmp}`, it starts Microsoft Word 2003 using a specific macro (`macro.vba`).
+If it encounters `to_printN.{doc(x), txt, bmp}`, it starts Microsoft Word 2007 using a specific macro (`macro.vba`).
 
 The macro reads the `to_print*` file and opens it or appends it to `empty_receipt.doc`.
 The macro then prints the document, suppressing any errors or warnings (about margins).
 Lastly it deletes the file and terminates Word.
 
-The script `macro.vba` is embedded in the base template of the Microsoft Office installation, so the file is not necessarily present on the system.
+The script `macro.vba` is embedded in the base template of the Microsoft Office installation, so the file is not explicitly present on the system.
 
 ## Features
 * Manage list of blocked and allowed users from telegram, as admin.
-* Print unicode text.
+* Print unicode text. Including EMOJI 👁👅👁!!
 * Print images (with captions), automatically converted to black and white bitmaps.
-* Print Microsoft Office `.doc` files.
+* Print Microsoft Office `.doc` and `.docx` files.
 * Request a template Microsoft Office `.doc` file with the correct paper size.
 * Get notified when you receive a fax.
-* Supports faxing stickers (with transparency)
-* Print superfast using a resident font, using the <F> (and </F>) tag
-* Print numbers as EAN-13 barcode using the <BAR> tag
+* Supports faxing stickers (remapping transparency to white)
+* Print superfast using a resident font, using the \<F\> html-style tag
+* Print numbers as EAN-13 barcode using the \<BAR\> tag
 * Pipe any output from your terminal to the printer with `mark`!
 * Print png files without compression, ideal for extreme aspect ratios!
 * Using [Willus' excellent pdf reflower](https://www.willus.com/k2pdfopt/) you can print any pdf, such as scientific publications. Just do `k2pdfopt input.pdf -w 400 -h 1620 -dpi 167 -idpi -2 && pdftoppm input_k2opt.pdf -r 250 out -png` and then send the resulting images to your bot (as files). Make sure you have `k2pdfopt` and `pdftoppm` in your path.
 
 ## Instructions
 Not necessarily in the correct order
-* Install Windows XP and Office 2003 in the VM
+* Install Windows XP and Office 2007 in the VM
 * Install the IBM printer driver, and make it the default printer
 * Embed the macro in Word by opening Word, pressing `Alt`+`F11` and pasting the code in a new script file.
-* On Linux, install `pip`, and via that install `python-telegram-bot`, `numpy` and `pillow`.
+* On Linux, install `pip`, and via that install `python-telegram-bot`, `numpy`, `emoji`, `htmlparser`, `python-docx` and `pillow`.
 * Place `print_poller` and its content on `C:\`
 * Mount the VirtualBox shared folder on `Z:\`
 * Create the directory `Z:\telegram_bot`
@@ -57,6 +57,7 @@ Not necessarily in the correct order
 * Use `setterm --blank `{`force` or `poke`}` --term linux </dev/tty1` to turn off the screen
 * For unicode support it may be necessary to enable *Microsoft Scripting Runtime* in `Microsoft Visual Basic>Tools>References`
 * Uncheck *Cable Connected* in Virtualbox settings>Network to isolate the VM
+* For Emoji support, install an emoji font (such as Segoe UI Emoji, `seguiemj.ttf`). Make sure its name matches that in the `.ini`-file.
 
 ## TODO
 * Implement schedule for working times. Notify users when printer is not connected/offline
@@ -73,5 +74,6 @@ See the Arch Wiki for details: https://wiki.archlinux.org/index.php/Unified_Exte
 
 ## Notes
 I don't own any rights to the IBM driver. Consider it abandonware.
+Same goes for the Segoe Emoji font.
 
 
