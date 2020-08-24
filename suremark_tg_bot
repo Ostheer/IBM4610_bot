@@ -14,7 +14,7 @@ from docx import Document
 from docx.shared import Pt
 import emoji
 
-configfile = "/home/ostheer/.suremark_tg_bot.ini"
+configfile = "/home/ostheer/Documents/IBM_devbot/.suremark_tg_bot.ini"
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 chat_state = 'normal'
 config = configparser.ConfigParser()
@@ -28,6 +28,15 @@ def print_text_raw(text, fullname):
     document = Document()
     p = document.add_paragraph()
     emojis = emoji.emoji_lis(text)
+    
+    try:
+        if text[0:2+len(config["TAGS"]["fast"])] == ("<"+config["TAGS"]["fast"]+">") and text[len(text)-3-len(config["TAGS"]["fast"]):] == ("</"+config["TAGS"]["fast"]+">"):
+            textfont = config["FONTS"]["fast"]
+            text = text[2+len(config["TAGS"]["fast"]):len(text)-3-len(config["TAGS"]["fast"])]
+        else:
+            textfont = config["FONTS"]["normal"]
+    except IndexError:
+        textfont = config["FONTS"]["normal"]
     
     if len(emojis) != 0:
         Nemo = len(emojis)
@@ -73,10 +82,10 @@ def print_text_raw(text, fullname):
             if seg[2]:
                 run = p.add_run(text[seg[0]:seg[1]])
                 run.font.size = Pt(10)
-                run.font.name = 'Segoe UI Emoji'#alternatively 'Twitter Color Emoji'
+                run.font.name = config["FONTS"]["emoji"]
             else:
                 run = p.add_run(text[seg[0]:seg[1]])
-                run.font.name = 'Courier New'
+                run.font.name = textfont
                 run.font.size = Pt(10)
                 run.bold = True
                 
@@ -182,7 +191,6 @@ def print_handler(update, context):
     #Try printing a sticker
     try:
         newFile = context.bot.get_file(update.message.sticker.file_id)
-        #ibm_print(None, doctype='caption')
         return ibm_print(newFile, doctype='photo')
     except (AttributeError):
         pass
@@ -190,7 +198,6 @@ def print_handler(update, context):
    #Try printing a photo
     try:
         newFile = context.bot.get_file(update.message.photo[-1].file_id)
-        #ibm_print(update.message.caption, doctype='caption')
         return ibm_print(newFile, doctype='photo', caption=update.message.caption)
     except (IndexError, AttributeError):
         pass
@@ -210,7 +217,7 @@ def print_handler(update, context):
             return 1
     except (IndexError, AttributeError):
         pass
-
+    
     #Try printing text
     return ibm_print(update.message.text)
 
