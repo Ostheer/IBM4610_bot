@@ -1,7 +1,7 @@
 from PIL import Image
 import emoji
 from docx import Document
-from docx.shared import Pt
+from docx.shared import Pt, Inches
 from html.parser import HTMLParser
 import os
 from uuid import uuid4
@@ -79,7 +79,7 @@ class pronter:
         elif doctype == 'photo':
             document = Document()
             imgf = self.save_image(thing)
-            document.add_picture(imgf)
+            document.add_picture(imgf, width=Inches(2.75))
             os.remove(imgf)
             if caption is not None:
                 parseToParagraph(self.tags, self.fonts, document.add_paragraph()).feed(caption)
