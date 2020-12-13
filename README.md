@@ -29,6 +29,7 @@ Lastly it deletes the file and terminates Word.
 The script `macro.vba` is embedded in the base template of the Microsoft Office installation, so the file is not explicitly present on the system.
 
 ## Features
+* Temporarily disable printing, using the `/sleep` command
 * Manage list of blocked and allowed users from telegram, as admin.
 * Print unicode text. Including EMOJI 👁👅👁!!
 * Print images (with captions), automatically converted to black and white bitmaps.
