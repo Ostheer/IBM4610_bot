@@ -1,381 +1,45 @@
 #!/bin/python
+
+### EDIT THIS LINE
+configfile = "/home/ostheer/Documents/git_projects/IBM4610_bot/suremark_tg_bot.ini"
+
+import time
 import telegram
 from telegram.ext import Updater
 from telegram.ext import CommandHandler
 from telegram.ext import MessageHandler, Filters
 import logging
 import configparser
-import os
-import time
-from PIL import Image
-import numpy as np
+import ibmcallbacks as ibm
+from tinydb import TinyDB
 
-#New Age pongel
-import emoji
-from docx import Document
-from docx.shared import Pt
-from html.parser import HTMLParser
-
-configfile = "/home/ostheer/.suremark_tg_bot.ini"
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
-chat_state = 'normal'
 config = configparser.ConfigParser()
 config.read(configfile)
+db = TinyDB(config["ADMIN"]["database_file"])
 
-updater = Updater(token=config["CONFIG"]["key"], use_context=True)
+manager = ibm.manager(db, config)
+
+
+updater = Updater(token=config["ADMIN"]["key"], use_context=True)
 dispatcher = updater.dispatcher
 
-def GetKey(d, val):
-    for key, value in d.items():
-        if val == value:
-            return key
-    return "Key Not Found"
+dispatcher.add_handler(CommandHandler('start',      manager.command_start))
+dispatcher.add_handler(CommandHandler('cancel',     manager.command_cancel))
+dispatcher.add_handler(CommandHandler('register',   manager.command_register))
+dispatcher.add_handler(CommandHandler('template',   manager.command_template))
+dispatcher.add_handler(CommandHandler('sleep',      manager.command_sleep))
 
-#to complete the confusion, all .txt and .caption files are from now on actually .docx files.
-#vergeef mij, oh HEERE, voor de pongel dezes methode
-def print_text_raw(text, fullname):
-    #parser parses parsable html tags and passes the to-parse unparsed data to the emoji-parser to select the emoji font where required
-    class kutparser(HTMLParser):
-        def handle_starttag(self, tag, attrs):
-            try:
-                sleutel = GetKey(config["TAGS"], tag.upper())
-                self.font = config["FONTS"][sleutel]
-            except KeyError:
-                self.font = config["FONTS"]["normal"]
-        
-        def handle_endtag(self, tag):
-            self.font = config["FONTS"]["normal"]
-
-        def handle_data(self, text):
-            try:
-                if self.font is None:
-                    self.font = config["FONTS"]["normal"]
-            except AttributeError:
-                self.font = config["FONTS"]["normal"]
-            
-            emojis = emoji.emoji_lis(text)
-            if len(emojis) != 0:
-                Nemo = len(emojis)
-                Ntxt = len(text)
-                #divide the text up into segments enclosed by emoji
-                segments = []
-                for i in range(Nemo):
-                    if emojis[i]["location"] == 0:
-                        #add emojus
-                        segments.append((0, 1, True))
-                        #add text following emojus
-                        first = 1
-                        try:
-                            last = emojis[i+1]["location"]
-                        except IndexError:
-                            last = Ntxt
-                        segments.append((first, last, False))
-                    elif emojis[i]["location"] == Ntxt-1:
-                        #add text preceding first emojus
-                        if i == 0:
-                            segments.append((0, emojis[i]["location"], False))
-                        #add emojus
-                        segments.append((Ntxt-1, Ntxt, True))
-                    else:
-                        #add text preceding first emojus
-                        if i == 0:
-                            segments.append((0, emojis[i]["location"], False))
-                        #add emojus
-                        segments.append((emojis[i]["location"], emojis[i]["location"]+1, True))
-                        #add text following emojus
-                        first = emojis[i]["location"]+1
-                        try:
-                            last = emojis[i+1]["location"]
-                        except IndexError:
-                            last = Ntxt
-                        segments.append((first, last, False))
-                #add all segments to the document
-                for seg in segments:
-                    if seg[2]:
-                        run = p.add_run(text[seg[0]:seg[1]])
-                        run.font.size = Pt(10)
-                        run.font.name = config["FONTS"]["emoji"]
-                    else:
-                        run = p.add_run(text[seg[0]:seg[1]])
-                        run.font.name = self.font
-                        run.font.size = Pt(10)
-                        run.bold = True   
-            else:
-                run = p.add_run(text)
-                run.font.name = self.font
-                run.font.size = Pt(10)
-                run.bold = True
-    #einde der kutparser
-    
-    document = Document()
-    p = document.add_paragraph()
-    parser = kutparser()
-    parser.feed(text)
-    document.save(fullname)
-
-def print_imag_raw(image, fullname):
-    image.download(fullname+"temp")
-    image_file = Image.open(fullname+"temp") # open colour image
-
-    #transparency to white
-    if 'A' in image_file.getbands():
-        image_file = image_file.convert('RGBA')
-        datas = image_file.getdata()
-        newData = []
-        for item in datas:
-            if item[3] == 0:
-                newData.append((255, 255, 255, 0))
-            elif item[3] != 255:
-                R = item[3]/255
-                bc = 255 - item[3]
-                newData.append((int(R*item[0] + bc), int(R*item[1] + bc), int(R*item[2] + bc), 0))
-            else:
-                newData.append(item)
-        image_file.putdata(newData)
-    
-    image_file = image_file.convert('1') # convert image to black and white
-    
-    finalname = fullname
-    if 'jpg' in finalname:
-        finalname = fullname.replace('jpg','bmp')
-    elif 'png' in finalname:
-        finalname = finalname.replace('png','bmp')
-    
-    image_file.save(finalname.replace('bmp','jpg'))#this is bullshit, but I don't feel like editing the Word macro over ssh+x to remove the line where it tries to remove this file. If it doesn't find the file, it doesn't remove the caption either. (in appendPrintCloseDelete)
-    image_file.save(finalname)
-    os.remove(fullname+"temp")
-
-def Nsuffix(path, prefix, extension):
-    N = 0
-    files = os.listdir(path)
-    for f in files:
-        if extension in f and prefix in f:
-            N = max(N, int(f.split('.'+extension)[0].split(prefix)[-1]))
-    return N+1
-
-def ibm_print(thing, doctype='text', caption=""):
-    if caption == None:
-        caption = ""
-        
-    if type(thing) == str and doctype == 'text':
-        N = Nsuffix(config["CONFIG"]["SHARED_DIR"], 'to_print', 'txt')
-        print_text_raw(thing, config["CONFIG"]["SHARED_DIR"] + "to_print" + str(N) + ".txt")
-        return 0
-
-    elif type(thing) == telegram.files.file.File and doctype == 'photo':
-        N = Nsuffix(config["CONFIG"]["SHARED_DIR"], 'to_print', 'bmp')
-        print_text_raw(caption, config["CONFIG"]["SHARED_DIR"] + "to_print" + str(N) + ".caption")
-        print_imag_raw(thing, config["CONFIG"]["SHARED_DIR"] + "to_print" + str(N) + ".jpg")
-        return 0
-
-    elif type(thing) == telegram.files.file.File and doctype == 'photofile':
-        N = Nsuffix(config["CONFIG"]["SHARED_DIR"], 'to_print', 'bmp')
-        print_text_raw(caption, config["CONFIG"]["SHARED_DIR"] + "to_print" + str(N) + ".caption")
-        print_imag_raw(thing, config["CONFIG"]["SHARED_DIR"] + "to_print" + str(N) + ".png")
-        return 0
-    
-    elif type(thing) == telegram.files.file.File and doctype == 'doc':
-        N = Nsuffix(config["CONFIG"]["SHARED_DIR"], 'to_print', 'doc')
-        thing.download(config["CONFIG"]["SHARED_DIR"] + "to_print" + str(N) + ".doc")
-        return 0
-
-    elif type(thing) == telegram.files.file.File and doctype == 'docx':
-        N = Nsuffix(config["CONFIG"]["SHARED_DIR"], 'to_print', 'docx')
-        thing.download(config["CONFIG"]["SHARED_DIR"] + "to_print" + str(N) + ".docx")
-        return 0
-
-    return 1
-
-def start(update, context):
-    context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["start_reply"])
-    context.bot.send_message(chat_id=config["USERS"]["admin"], text=str(update.effective_chat.first_name)+" (ID "+str(update.effective_chat.id)+") " + config["LANG"]["start_request"])
-
-def give_template(update, context):
-    if (str(update.effective_chat.id) == config["USERS"]["admin"]) or (str(update.effective_chat.id) in config["USERS"]["allowed"].split(',')):
-        context.bot.send_document(chat_id=update.effective_chat.id, document=open(config["CONFIG"]["template_doc"], 'rb'))
-        context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["template_doc_sent"])
-    else:
-        context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["unauthorized"])
-
-def photo_handler(update, context):
-    echo(update, context)
-
-def document_handler(update, context):
-    echo(update, context)
-
-def print_handler(update, context):
-    #Try printing a sticker
-    try:
-        newFile = context.bot.get_file(update.message.sticker.file_id)
-        return ibm_print(newFile, doctype='photo')
-    except (AttributeError):
-        pass
-    
-   #Try printing a photo
-    try:
-        newFile = context.bot.get_file(update.message.photo[-1].file_id)
-        return ibm_print(newFile, doctype='photo', caption=update.message.caption)
-    except (IndexError, AttributeError):
-        pass
-
-    #Try printing a document
-    try:
-        if update.message.document.file_name.split('.')[-1] == 'doc':
-            newFile = context.bot.get_file(update.message.document.file_id)
-            return ibm_print(newFile, doctype='doc')
-        elif  update.message.document.file_name.split('.')[-1] == 'docx':
-            newFile = context.bot.get_file(update.message.document.file_id)
-            return ibm_print(newFile, doctype='docx')
-        elif  update.message.document.file_name.split('.')[-1] == 'png':
-            newFile = context.bot.get_file(update.message.document.file_id)
-            return ibm_print(newFile, doctype='photofile')
-        else:
-            return 1
-    except (IndexError, AttributeError):
-        pass
-    
-    #print(dir(update.message))
-    #print(update.message.text_html)
-    #print(update.message.text_markdown_v2_urled)
-    #Try printing text
-    return ibm_print(update.message.text)
-
-
-def register_cancel(update, context):
-    global chat_state
-    if str(update.effective_chat.id) == config["USERS"]["admin"]:
-        chat_state = 'normal'
-        reply_markup = telegram.ReplyKeyboardRemove()
-        context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["cancelled"], reply_markup=reply_markup)
-    else:
-        context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["unauthorized"])
-
-def register_user(update, context):
-    global chat_state
-    if str(update.effective_chat.id) == config["USERS"]["admin"]:
-        chat_state = 'register'
-        custom_keyboard = [[config["LANG"]["register_allow"]], [config["LANG"]["register_block"]], [config["LANG"]["register_remove"]]]
-        reply_markup = telegram.ReplyKeyboardMarkup(custom_keyboard)
-        context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_how"], reply_markup=reply_markup)
-    else:
-        context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["unauthorized"])
-
-def echo(update, context):
-    global chat_state
-    config.read(configfile)
-   
-    #Admin user
-    if str(update.effective_chat.id) == config["USERS"]["admin"]:
-        if chat_state == 'normal':
-            if not print_handler(update, context):
-                context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["print_started"])
-            else:
-                context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["print_failed"])
-   
-        elif chat_state == 'register':
-            reply_markup = telegram.ReplyKeyboardRemove()
-            if update.message.text == config["LANG"]["register_allow"]:
-                context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_allow_who"], reply_markup=reply_markup)
-                chat_state = 'register_allow'
-            elif update.message.text == config["LANG"]["register_block"]:
-                context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_block_who"], reply_markup=reply_markup)
-                chat_state = 'register_block'
-            elif update.message.text == config["LANG"]["register_remove"]:
-                context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_remove_who"], reply_markup=reply_markup)
-                chat_state = 'register_remove'
-
-        elif chat_state == 'register_allow':
-            try:
-                context.bot.send_message(chat_id=update.message.text, text=config["LANG"]["register_granted"])
-                config["USERS"]["allowed"] += "," + update.message.text
-                with open(configfile, 'w') as f:
-                    config.write(f)
-                context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_allow_success"])
-            except telegram.error.BadRequest:
-                context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_allow_invalid_id"])
-            except telegram.error.Unauthorized:
-                context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_unauthorized"])
-            except:
-                context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["unknown_error"])
-            finally:
-                chat_state = 'normal'
-
-        elif chat_state == 'register_block':
-            try:
-                context.bot.send_message(chat_id=update.message.text, text=config["LANG"]["register_denied"])
-                config["USERS"]["blocked"] += "," + update.message.text
-                with open(configfile, 'w') as f:
-                    config.write(f)
-                context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_block_success"])
-            except telegram.error.BadRequest:
-                context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_block_invalid_id"])
-            except telegram.error.Unauthorized:
-                context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_unauthorized"])
-            except:
-                context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["unknown_error"])
-            finally:
-                chat_state = 'normal'
-
-        elif chat_state == 'register_remove':
-            try:
-                config["USERS"]["blocked"] = config["USERS"]["blocked"].replace(update.message.text, "")
-                config["USERS"]["allowed"] = config["USERS"]["allowed"].replace(update.message.text, "")
-
-                while ",," in config["USERS"]["allowed"]:
-                    config["USERS"]["allowed"] = config["USERS"]["allowed"].replace(",,",",")
-                while ",," in config["USERS"]["blocked"]:
-                    config["USERS"]["blocked"] = config["USERS"]["blocked"].replace(",,",",")
-
-                with open(configfile, 'w') as f:
-                    config.write(f)
-                context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["register_remove_success"])
-            except:
-                context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["unknown_error"])
-            finally:
-                chat_state = 'normal'
-
-    #Whitelisted user
-    elif str(update.effective_chat.id) in config["USERS"]["allowed"].split(','):
-        if not print_handler(update, context):
-            context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["print_started"])
-            context.bot.send_message(chat_id=config["USERS"]["admin"], text=str(update.effective_chat.first_name) + " " + config["LANG"]["print_received"])
-        else:
-            context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["print_failed"])
-
-    #Blocked user
-    elif  str(update.effective_chat.id) in config["USERS"]["blocked"].split(','):
-        context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["request_reply_blocked_user"])
- 
-    #Unknown user.
-    else:
-        context.bot.send_message(chat_id=update.effective_chat.id, text=config["LANG"]["request_reply_unknown_user"])
-        context.bot.send_message(chat_id=config["USERS"]["admin"], text=str(update.effective_chat.first_name)+" (ID "+str(update.effective_chat.id)+") " + config["LANG"]["print_attempt"])
-        context.bot.send_message(chat_id=config["USERS"]["admin"], text=update.message.text)
-
-start_handler = CommandHandler('start', start)
-dispatcher.add_handler(start_handler)
-
-dispatcher.add_handler(CommandHandler('template', give_template))
-
-register_cancel_handler = CommandHandler('cancel', register_cancel)
-dispatcher.add_handler(register_cancel_handler)
-
-register_handler = CommandHandler('register', register_user)
-dispatcher.add_handler(register_handler)
-
-echo_handler2 = MessageHandler(Filters.sticker, echo)
-dispatcher.add_handler(echo_handler2)
-
-echo_handler = MessageHandler(Filters.text, echo)
-dispatcher.add_handler(echo_handler)
-
-dispatcher.add_handler(MessageHandler(Filters.photo, photo_handler))
-dispatcher.add_handler(MessageHandler(Filters.document, document_handler))
+dispatcher.add_handler(MessageHandler(Filters.sticker,  manager.handle))
+dispatcher.add_handler(MessageHandler(Filters.text,     manager.handle))
+dispatcher.add_handler(MessageHandler(Filters.photo,    manager.handle))
+dispatcher.add_handler(MessageHandler(Filters.document, manager.handle))
 
 
 attempts = 0
 while attempts < 5:
     try:
+        #TODO: This seems to hog one thread to 100%
         updater.start_polling()
     except telegram.error.NetworkError:
         time.sleep(10)
