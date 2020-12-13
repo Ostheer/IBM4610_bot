@@ -5,7 +5,7 @@ Sub appendPrintCloseDelete()
     MyFile = Dir(myPath & "*.docx")
     If Len(MyFile) > 0 Then
         If InStr(MyFile, "_direct") > 0 Then
-            Exit Sub
+            CloseProgram
         End If
         add_text_from_docx myPath & MyFile
         print_now
