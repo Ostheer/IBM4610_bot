@@ -6,7 +6,7 @@ Wants=network-online.target
 
 [Service]
 User=ostheer
-ExecStart=/usr/bin/suremark_tg_bot
+ExecStart=/opt/suremark_tg_bot/suremark_tg_bot
 
 [Install]
 WantedBy=multi-user.target
