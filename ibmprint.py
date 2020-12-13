@@ -86,10 +86,11 @@ class pronter:
             document.save(self.qd + filename)
         
         elif doctype == 'doc':
-            filename = filename.replace("docx", "doc")
+            filename = "direct_" + filename.replace("docx", "doc")
             thing.download(self.qd + filename)
 
         elif doctype == 'docx':
+            filename = "direct_" + filename
             thing.download(self.qd + filename)
 
         return uuid, filename
