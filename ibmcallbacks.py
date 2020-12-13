@@ -138,7 +138,7 @@ class manager:
     def command_start(self, update, context):
         self.send_message(update, context, "start_reply")
         self.tell_daddy(context, str(update.effective_chat.first_name) + " (ID "+str(update.effective_chat.id)+") " + self.lang["start_request"], raw=True)
-        self.db.table("strangers").insert({"name":str(update.effective_chat.full_name), "id":str(update.effective_chat.id)})
+        self.db.table("strangers").insert({"name":str(update.effective_chat.first_name)+" "+str(update.effective_chat.last_name), "id":str(update.effective_chat.id)})
     
     def command_cancel(self, update, context):
         if self.accesslevel(update.effective_chat.id) == 2:
@@ -154,6 +154,7 @@ class manager:
         if self.accesslevel(update.effective_chat.id) == 2:
             if self.state == "normal":
                 custom_keyboard = [[self.lang["register_allow"]], [self.lang["register_block"]], [self.lang["register_remove"]]]
+                custom_keyboard.append(["/cancel"])
                 reply_markup = telegram.ReplyKeyboardMarkup(custom_keyboard)
                 self.tell_daddy(context, "register_how", reply_markup=reply_markup)
                 self.state = "register"
@@ -199,7 +200,7 @@ class manager:
                 self.send_message(update, context, "request_reply_unknown_user")
                 self.tell_daddy(context, str(update.effective_chat.first_name) + " (ID "+str(update.effective_chat.id)+") " + self.lang["print_attempt"], raw=True)
                 self.handle_print(update, context, tentative=True)
-                self.db.table("strangers").insert({"name":str(update.effective_chat.full_name), "id":str(update.effective_chat.id)})
+                self.db.table("strangers").insert({"name":str(update.effective_chat.first_name)+" "+str(update.effective_chat.last_name), "id":str(update.effective_chat.id)})
             elif self.accesslevel(update.effective_chat.id) == -1:
                 self.send_message(update, context, "request_reply_blocked_user") #HAHA LOSER
         
@@ -258,6 +259,7 @@ class manager:
                 users = self.db.table("strangers").all()
                 users.extend(self.db.table("users").search(where("type") == "blocked"))
                 custom_keyboard = [[mkb(users[i])] for i in range(len(users))]
+                custom_keyboard.append(["/cancel"])
                 self.tell_daddy(context, "register_allow_choose", reply_markup=telegram.ReplyKeyboardMarkup(custom_keyboard))
                 self.state = "register_allow"
             elif update.message.text == self.lang["register_block"]:
@@ -265,12 +267,14 @@ class manager:
                 users = self.db.table("strangers").all()
                 users.extend(self.db.table("users").all())
                 custom_keyboard = [[mkb(users[i])] for i in range(len(users))]
+                custom_keyboard.append(["/cancel"])
                 self.tell_daddy(context, "register_block_choose", reply_markup=telegram.ReplyKeyboardMarkup(custom_keyboard))
                 self.state = "register_block"
             elif update.message.text == self.lang["register_remove"]:
                 self.tell_daddy(context, "register_remove_who", reply_markup=telegram.ReplyKeyboardRemove())
                 users = self.db.table("users").all()
                 custom_keyboard = [[mkb(users[i])] for i in range(len(users))]
+                custom_keyboard.append(["/cancel"])
                 self.tell_daddy(context, "register_remove_choose", reply_markup=telegram.ReplyKeyboardMarkup(custom_keyboard))
                 self.state = "register_remove"
 
