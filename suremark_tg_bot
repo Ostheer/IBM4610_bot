@@ -29,6 +29,7 @@ dispatcher.add_handler(CommandHandler('cancel',     manager.command_cancel))
 dispatcher.add_handler(CommandHandler('register',   manager.command_register))
 dispatcher.add_handler(CommandHandler('template',   manager.command_template))
 dispatcher.add_handler(CommandHandler('sleep',      manager.command_sleep))
+dispatcher.add_handler(CommandHandler('database',   manager.command_database))
 
 dispatcher.add_handler(MessageHandler(Filters.sticker,  manager.handle))
 dispatcher.add_handler(MessageHandler(Filters.text,     manager.handle))

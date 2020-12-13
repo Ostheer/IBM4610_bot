@@ -62,7 +62,7 @@ class manager:
                 else:
                     return True, "register_block_error_admin"
         else:
-            return True, "unknown_error" #TODO: duplicate entry, should not occur, consider sending a warning
+            return True, "error_user_duplicate" #TODO: duplicate entry, should not occur, consider sending a warning
     
     def deluser(self, user_id):
         user_id = str(user_id)
@@ -109,7 +109,7 @@ class manager:
             else:
                 id = update.effective_chat.id
         except KeyError:
-            return True, "unknown_error"
+            return True, "error_sending_message_id"
 
         if not raw:
             try:
@@ -127,7 +127,7 @@ class manager:
         except telegram.error.BadRequest:
             return True, "error_invalid_id"
         except:
-            return True, "unknown_error"
+            return True, "error_sending_message_general"
         
         return False,
         
@@ -156,7 +156,7 @@ class manager:
                 custom_keyboard = [[self.lang["register_allow"]], [self.lang["register_block"]], [self.lang["register_remove"]]]
                 custom_keyboard.append(["/cancel"])
                 reply_markup = telegram.ReplyKeyboardMarkup(custom_keyboard)
-                self.tell_daddy(context, "register_how", reply_markup=reply_markup)
+                self.tell_daddy(context, "request_what", reply_markup=reply_markup)
                 self.state = "register"
         else:
             self.send_message(update, context, "unauthorized")
@@ -188,10 +188,23 @@ class manager:
         else:
             self.send_message(update, context, "unauthorized")
 
-
+    def command_database(self, update, context):
+        if self.accesslevel(update.effective_chat.id) == 2:
+            if self.state == "normal":
+                custom_keyboard = [[self.lang["database_load"]], [self.lang["database_dump"]]]
+                custom_keyboard.append(["/cancel"])
+                reply_markup = telegram.ReplyKeyboardMarkup(custom_keyboard)
+                self.tell_daddy(context, "request_what", reply_markup=reply_markup)
+                self.state = "database_modify"
+        else:
+            self.send_message(update, context, "unauthorized")
+    
     def handle(self, update, context):
         if self.state.startswith("register") and self.accesslevel(update.effective_chat.id) == 2:
             self.register(update, context)
+
+        elif self.state.startswith("database_modify") and self.accesslevel(update.effective_chat.id) == 2:
+            self.modify_database(update, context)
 
         else:
             if self.accesslevel(update.effective_chat.id) >= 1:
@@ -312,3 +325,50 @@ class manager:
                 else:
                     self.tell_daddy(context, r[1], reply_markup=removekeyboard)
                 self.state = "normal"
+            else:
+                self.command_cancel(update, context)
+    
+    def modify_database(self, update, context):
+        def dump_db(self, update, context):
+            if self.accesslevel(update.effective_chat.id) == 2:
+                context.bot.send_document(chat_id=update.effective_chat.id, document=open(self.cf["ADMIN"]["database_file"], 'rb'))
+        
+        def load_db(self, update, context):
+            if self.accesslevel(update.effective_chat.id) == 2:
+                if fileExtenstion(update) == "json":
+                    #TODO: check if JSON is valid
+                    context.bot.get_file(update.message.document.file_id).download(self.cf["ADMIN"]["database_file"])
+                    return False,
+                else:
+                    return True, "database_new_invalid"
+
+        if self.accesslevel(update.effective_chat.id) != 2:
+            self.send_message(update, context, "register_unauthorized")
+            return
+
+        if self.state == "database_modify":
+            if update.message.text == self.lang["database_load"]:
+                self.state = "database_modify_load"
+                self.tell_daddy(context, "confirm_ask", reply_markup=telegram.ReplyKeyboardMarkup([[self.lang["confirm_pos"]], [self.lang["confirm_neg"]]]))    
+            elif update.message.text == self.lang["database_dump"]:
+                self.tell_daddy(context, "here_you_go", reply_markup=telegram.ReplyKeyboardRemove())
+                dump_db(self, update, context)
+                self.state = "normal"
+            else:
+                self.command_cancel(update, context)
+
+        elif self.state == "database_modify_load":
+            if update.message.text == self.lang["confirm_pos"]:
+                self.state = "database_modify_load_confirmed"
+            elif update.message.text == self.lang["confirm_neg"]:
+                self.command_cancel(update, context)
+            else:
+                self.command_cancel(update, context)
+
+        elif self.state == "database_modify_load_confirmed":
+            r = load_db(self, update, context)
+            if not r[0]:
+                self.tell_daddy(context, "database_new_loaded", reply_markup=telegram.ReplyKeyboardRemove())
+            else:
+                self.tell_daddy(context, r[1], reply_markup=telegram.ReplyKeyboardRemove())
+            self.state = "normal"
