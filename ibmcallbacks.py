@@ -249,6 +249,9 @@ class manager:
             if not tentative:
                 self.send_message(update, context, "print_started")
             
+            if self.accesslevel(update.effective_chat.id) == 1:
+                self.tell_daddy(context, str(update.effective_chat.first_name) + " " + self.lang["print_received"], raw=True)
+            
             self.db.table("users").update(tdop.increment("N"), Query().id == str(update.effective_chat.id))
 
             if not self.asleep:
