@@ -69,11 +69,11 @@ class pronter:
 
     def prepare_document(self, thing, doctype, caption):
         uuid = suuid()
-        filename = uuid + ".docx"
-            
+        
         if doctype == 'text':
             document = Document()
             parseToParagraph(self.tags, self.fonts, document.add_paragraph()).feed(thing)
+            filename = uuid + ".docx"
             document.save(self.qd + filename)
 
         elif doctype == 'photo':
@@ -83,14 +83,15 @@ class pronter:
             os.remove(imgf)
             if caption is not None:
                 parseToParagraph(self.tags, self.fonts, document.add_paragraph()).feed(caption)
+            filename = uuid + ".docx"
             document.save(self.qd + filename)
         
         elif doctype == 'doc':
-            filename = "direct_" + filename.replace("docx", "doc")
+            filename = uuid + "_direct" + ".doc"
             thing.download(self.qd + filename)
 
         elif doctype == 'docx':
-            filename = "direct_" + filename
+            filename = uuid + "_direct" + ".docx"
             thing.download(self.qd + filename)
 
         return uuid, filename

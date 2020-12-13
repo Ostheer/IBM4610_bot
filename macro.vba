@@ -1,28 +1,16 @@
 Sub appendPrintCloseDelete()
-    myPath = "Z:\telegram_bot\"
+    myPath = "Z:\telegram_bot\print\"
     
     'Scan for text files
-    MyFile = Dir(myPath & "to_print*.txt")
+    MyFile = Dir(myPath & "*.docx")
     If Len(MyFile) > 0 Then
+        If InStr(MyFile, "_direct") > 0 Then
+            Exit Sub
+        End If
         add_text_from_docx myPath & MyFile
         print_now
         On Error GoTo CloseProgram:
             Kill myPath & MyFile
-    End If
-
-    'Scan for images
-    MyFile = Dir(myPath & "to_print*.bmp")
-    myFile_src = Replace(MyFile, ".bmp", ".jpg")
-    myCaption = Replace(MyFile, ".bmp", ".caption")
-    If Len(MyFile) > 0 Then
-        add_imag myPath & MyFile
-        ActiveDocument.Content.InsertAfter Text:=vbNewLine
-        add_text_from_docx myPath & myCaption
-        print_now
-        On Error GoTo CloseProgram:
-            Kill myPath & MyFile
-            Kill myPath & myFile_src
-            Kill myPath & myCaption
     End If
 
 CloseProgram:
@@ -56,13 +44,6 @@ Sub add_text_from_docx(MyFile)
         Selection.InsertFile FileName:=MyFile, Link:=False
 ErrHandler1:
     Exit Sub
-End Sub
-
-Sub add_imag(MyFile)
-    On Error GoTo ErrHandler1:
-        Selection.InlineShapes.AddPicture FileName:=MyFile, LinkToFile:=False, SaveWithDocument:=True
-ErrHandler1:
-        Exit Sub
 End Sub
 
 Sub print_now()
