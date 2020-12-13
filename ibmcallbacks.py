@@ -1,6 +1,7 @@
 import telegram
 import ibmprint
 import datetime
+import time
 from tinydb import Query
 import tinydb.operations as tdop
 from tinydb import where
@@ -35,7 +36,19 @@ class manager:
             users = self.db.table("users")
             users.insert({"name":"admin", "id":self.cf["ADMIN"]["admin_id"], "type":"admin", "added":nows(), "N":0})
             #TODO: check if admin ID has been updated in config file
+        if not "activehours" in self.db.tables():
+            activehours = self.db.table("activehours")
+            activehours.insert({"type":"main", "enabled":False, "start":(23,00), "stop":(9,00)})
 
+    def update(self, context):
+        #Update asleep-state from 
+        ah = self.hour_is_active()
+        if ah is not None:
+            if self.asleep:
+                if ah:
+                    self.asleep = False
+                    if self.missed_messages > 0:
+                        self.tell_daddy(context, self.lang["sleep_state_left_summary"].replace("NUM_MISSED_MESSAGES", str(self.missed_messages)), raw=True)
 
     ### helper functions
     def moduser(self, name, user_id, utype):
@@ -134,6 +147,26 @@ class manager:
     def tell_daddy(self, context, string, **kwargs):
         return self.send_message(None, context, string, direct_id=self.cf["ADMIN"]["admin_id"], **kwargs)
 
+    def hour_is_active(self):
+        if not self.db.table("activehours").get(Query().type == "main")["enabled"]:
+            return None
+        else:
+            ahstart = self.db.table("activehours").get(Query().type == "main")["start"]
+            ahstop = self.db.table("activehours").get(Query().type == "main")["stop"]
+            ahstart = ahstart[0]*60 + ahstart[1]
+            ahstop = ahstop[0]*60 + ahstop[1]
+            now = datetime.datetime.now().hour*60 + datetime.datetime.now().minute
+
+            if ahstop < ahstart:
+                if  now > ahstart or now < ahstop:
+                    return True
+                else:
+                    return False
+            else:
+                if now > ahstart and now < ahstop:
+                    return True
+                else:
+                    return False
 
     def command_start(self, update, context):
         self.send_message(update, context, "start_reply")
@@ -199,12 +232,26 @@ class manager:
         else:
             self.send_message(update, context, "unauthorized")
     
+    def command_activehours(self, update, context):
+        if self.accesslevel(update.effective_chat.id) == 2:
+            if self.state == "normal":
+                custom_keyboard = [[self.lang["activehours_enable"]], [self.lang["activehours_disable"]], [self.lang["activehours_set"]]]
+                custom_keyboard.append(["/cancel"])
+                reply_markup = telegram.ReplyKeyboardMarkup(custom_keyboard)
+                self.tell_daddy(context, "request_what", reply_markup=reply_markup)
+                self.state = "activehours"
+        else:
+            self.send_message(update, context, "unauthorized")
+
     def handle(self, update, context):
         if self.state.startswith("register") and self.accesslevel(update.effective_chat.id) == 2:
             self.register(update, context)
 
         elif self.state.startswith("database_modify") and self.accesslevel(update.effective_chat.id) == 2:
             self.modify_database(update, context)
+
+        elif self.state.startswith("activehours") and self.accesslevel(update.effective_chat.id) == 2:
+            self.activehours(update, context)
 
         else:
             if self.accesslevel(update.effective_chat.id) >= 1:
@@ -371,4 +418,42 @@ class manager:
                 self.tell_daddy(context, "database_new_loaded", reply_markup=telegram.ReplyKeyboardRemove())
             else:
                 self.tell_daddy(context, r[1], reply_markup=telegram.ReplyKeyboardRemove())
+            self.state = "normal"
+
+    def activehours(self, update, context):
+        if self.accesslevel(update.effective_chat.id) != 2:
+            self.send_message(update, context, "register_unauthorized")
+            return
+
+        if self.state == "activehours":
+            if update.message.text == self.lang["activehours_enable"]:
+                self.db.table("activehours").update(tdop.set("enabled", True), Query().type == "main")
+                self.tell_daddy(context, "task_done", reply_markup=telegram.ReplyKeyboardRemove())
+                self.state = "normal"
+            elif update.message.text == self.lang["activehours_disable"]:
+                self.db.table("activehours").update(tdop.set("enabled", False), Query().type == "main")
+                self.tell_daddy(context, "task_done", reply_markup=telegram.ReplyKeyboardRemove())
+                self.asleep = False
+                self.state = "normal"
+            elif update.message.text == self.lang["activehours_disable"]:
+                self.tell_daddy(context, "activehours_set_time", reply_markup=telegram.ReplyKeyboardRemove())
+                self.state == "activehours_set"
+            else:
+                self.command_cancel(update, context)
+
+        elif self.state == "activehours_set":
+            try:
+                newhours = update.message.text
+                wake = newhours.split(", ")[0].split(":")
+                wake = (int(wake[0]), int(wake[1]))
+                bed = newhours.split(", ")[1].split(":")
+                bed = (int(bed[0]), int(bed[1]))
+            except:
+                self.tell_daddy(context, "error_parsing")
+                self.state = "normal"
+                return
+
+            self.db.table("activehours").update(tdop.set("start", bed), Query().type == "main")
+            self.db.table("activehours").update(tdop.set("stop", wake), Query().type == "main")
+            self.tell_daddy(context, "task_done", reply_markup=telegram.ReplyKeyboardRemove())
             self.state = "normal"

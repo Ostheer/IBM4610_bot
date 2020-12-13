@@ -8,33 +8,35 @@ import telegram
 from telegram.ext import Updater
 from telegram.ext import CommandHandler
 from telegram.ext import MessageHandler, Filters
-import logging
 import configparser
 import ibmcallbacks as ibm
 from tinydb import TinyDB
 
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 config = configparser.ConfigParser()
 config.read(configfile)
 db = TinyDB(config["ADMIN"]["database_file"])
-
 manager = ibm.manager(db, config)
-
 
 updater = Updater(token=config["ADMIN"]["key"], use_context=True)
 dispatcher = updater.dispatcher
+job_queue = updater.job_queue
 
-dispatcher.add_handler(CommandHandler('start',      manager.command_start))
-dispatcher.add_handler(CommandHandler('cancel',     manager.command_cancel))
-dispatcher.add_handler(CommandHandler('register',   manager.command_register))
-dispatcher.add_handler(CommandHandler('template',   manager.command_template))
-dispatcher.add_handler(CommandHandler('sleep',      manager.command_sleep))
-dispatcher.add_handler(CommandHandler('database',   manager.command_database))
+job_queue.run_repeating(manager.update, interval=5, first=0)
+
+
+dispatcher.add_handler(CommandHandler('start',       manager.command_start))
+dispatcher.add_handler(CommandHandler('cancel',      manager.command_cancel))
+dispatcher.add_handler(CommandHandler('register',    manager.command_register))
+dispatcher.add_handler(CommandHandler('template',    manager.command_template))
+dispatcher.add_handler(CommandHandler('sleep',       manager.command_sleep))
+dispatcher.add_handler(CommandHandler('database',    manager.command_database))
+dispatcher.add_handler(CommandHandler('activehours', manager.command_activehours))
 
 dispatcher.add_handler(MessageHandler(Filters.sticker,  manager.handle))
 dispatcher.add_handler(MessageHandler(Filters.text,     manager.handle))
 dispatcher.add_handler(MessageHandler(Filters.photo,    manager.handle))
 dispatcher.add_handler(MessageHandler(Filters.document, manager.handle))
+
 
 
 attempts = 0
