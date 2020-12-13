@@ -3,6 +3,7 @@ import ibmprint
 import datetime
 from tinydb import Query
 import tinydb.operations as tdop
+from tinydb import where
 
 def nows():
     return str(datetime.datetime.now())
@@ -42,20 +43,26 @@ class manager:
         User = Query()
         t = self.db.table("users")
         r = t.search(User.id == user_id)
+        #TODO: also check if name has been updated
 
         if len(r) == 0:
             #add new user
             t.insert({"name":name, "id":user_id, "type":utype, "added":nows(), "N":0})
-            return False
+            #remove from strangers
+            self.db.table("strangers").remove(where("id") == user_id)
+            return False,
         elif len(r) == 1:
             #user already registered
             if r[0]["type"] != utype:
-                #update user type
-                t.update(tdop.set("type", utype), User.id == user_id)
-                return False
-            #else do nothing
+                #check if we're not blocking the main admin
+                if not user_id == self.cf["ADMIN"]["admin_id"]:
+                    #update user type
+                    t.update(tdop.set("type", utype), User.id == user_id)
+                    return False,
+                else:
+                    return True, "register_block_error_admin"
         else:
-            return True #TODO: duplicate entry, should not occur, consider sending a warning
+            return True, "unknown_error" #TODO: duplicate entry, should not occur, consider sending a warning
     
     def deluser(self, user_id):
         user_id = str(user_id)
@@ -64,10 +71,13 @@ class manager:
         r = t.search(User.id == user_id)
 
         if len(r) == 0:
-            return True #no such user, cannot delete
+            return True, "error_invalid_id"
         elif len(r) > 0:
-            t.remove(User.id == user_id)
-            return False
+            if not user_id == self.cf["ADMIN"]["admin_id"]:
+                t.remove(User.id == user_id)
+                return False,
+            else:
+                return True, "register_block_error_admin"
     
     def accesslevel(self, user_id):
         """
@@ -99,22 +109,23 @@ class manager:
             else:
                 id = update.effective_chat.id
         except KeyError:
-            return True,
+            return True, "unknown_error"
+
+        if not raw:
+            try:
+                tosend = self.lang[string]
+            except KeyError:
+                tosend = "Invalid key: " + string
+        else:
+            tosend = string
 
         try:
             if "reply_markup" in kwargs:
-                rm = kwargs["reply_markup"]
-                if not raw:
-                    context.bot.send_message(chat_id=id, text=self.lang[string], reply_markup=rm)
-                else:
-                    context.bot.send_message(chat_id=id, text=string, reply_markup=rm)
+                context.bot.send_message(chat_id=id, text=tosend, reply_markup=kwargs["reply_markup"])
             else:
-                if not raw:
-                    context.bot.send_message(chat_id=id, text=self.lang[string])
-                else:
-                    context.bot.send_message(chat_id=id, text=string)
+                context.bot.send_message(chat_id=id, text=tosend)
         except telegram.error.BadRequest:
-            return True, "message_invalid_id"
+            return True, "error_invalid_id"
         except:
             return True, "unknown_error"
         
@@ -127,10 +138,11 @@ class manager:
     def command_start(self, update, context):
         self.send_message(update, context, "start_reply")
         self.tell_daddy(context, str(update.effective_chat.first_name) + " (ID "+str(update.effective_chat.id)+") " + self.lang["start_request"], raw=True)
-
+        self.db.table("strangers").insert({"name":str(update.effective_chat.full_name), "id":str(update.effective_chat.id)})
+    
     def command_cancel(self, update, context):
         if self.accesslevel(update.effective_chat.id) == 2:
-            if self.state == "register":
+            if self.state != "normal":
                 self.tell_daddy(context, "cancelled", reply_markup=telegram.ReplyKeyboardRemove())
                 self.state = "normal"
             else:
@@ -187,6 +199,7 @@ class manager:
                 self.send_message(update, context, "request_reply_unknown_user")
                 self.tell_daddy(context, str(update.effective_chat.first_name) + " (ID "+str(update.effective_chat.id)+") " + self.lang["print_attempt"], raw=True)
                 self.handle_print(update, context, tentative=True)
+                self.db.table("strangers").insert({"name":str(update.effective_chat.full_name), "id":str(update.effective_chat.id)})
             elif self.accesslevel(update.effective_chat.id) == -1:
                 self.send_message(update, context, "request_reply_blocked_user") #HAHA LOSER
         
@@ -238,36 +251,60 @@ class manager:
             return
 
         if self.state == "register":
-            reply_markup = telegram.ReplyKeyboardRemove()
+            mkb = lambda s: "Name: {0}\n ID: {1}".format(s["name"], s["id"])
+
             if update.message.text == self.lang["register_allow"]:
-                self.tell_daddy(context, "register_allow_who", reply_markup=reply_markup)
+                self.tell_daddy(context, "register_allow_who", reply_markup=telegram.ReplyKeyboardRemove())
+                users = self.db.table("strangers").all()
+                users.extend(self.db.table("users").search(where("type") == "blocked"))
+                custom_keyboard = [[mkb(users[i])] for i in range(len(users))]
+                self.tell_daddy(context, "register_allow_choose", reply_markup=telegram.ReplyKeyboardMarkup(custom_keyboard))
                 self.state = "register_allow"
             elif update.message.text == self.lang["register_block"]:
-                self.tell_daddy(context, "register_block_who", reply_markup=reply_markup)
+                self.tell_daddy(context, "register_block_who", reply_markup=telegram.ReplyKeyboardRemove())
+                users = self.db.table("strangers").all()
+                users.extend(self.db.table("users").all())
+                custom_keyboard = [[mkb(users[i])] for i in range(len(users))]
+                self.tell_daddy(context, "register_block_choose", reply_markup=telegram.ReplyKeyboardMarkup(custom_keyboard))
                 self.state = "register_block"
             elif update.message.text == self.lang["register_remove"]:
-                self.tell_daddy(context, "register_remove_who", reply_markup=reply_markup)
+                self.tell_daddy(context, "register_remove_who", reply_markup=telegram.ReplyKeyboardRemove())
+                users = self.db.table("users").all()
+                custom_keyboard = [[mkb(users[i])] for i in range(len(users))]
+                self.tell_daddy(context, "register_remove_choose", reply_markup=telegram.ReplyKeyboardMarkup(custom_keyboard))
                 self.state = "register_remove"
 
-        elif self.state == "register_allow":
-            r = self.send_message(update, context, "register_granted", direct_id=update.message.text)
-            if not r[0]:
-                self.moduser(str(update.effective_chat.full_name), str(update.effective_chat.id), "user")
-                self.tell_daddy(context, "register_allow_success")
-            else:
-                self.tell_daddy(context, r[1])
-            self.state = "normal"
+        else:
+            removekeyboard = telegram.ReplyKeyboardRemove()
+            try:
+                user_name = update.message.text.split("\n ID: ")[0].split("Name: ")[1].strip()
+                user_id = update.message.text.split("\n ID: ")[1].strip()
+            except IndexError:
+                user_name = "Unknown"
+                user_id = update.message.text.strip()
 
-        elif self.state == "register_block":
-            r = self.send_message(update, context, "register_denied", direct_id=update.message.text)
-            if not r[0]:
-                self.moduser(str(update.effective_chat.full_name), str(update.effective_chat.id), "blocked")
-                self.tell_daddy(context, "register_block_success")
-            else:
-                self.tell_daddy(context, r[1])
-            self.state = "normal"
+            if self.state == "register_allow":
+                r = self.send_message(update, context, "register_granted", direct_id=user_id)
+                if not r[0]:
+                    self.moduser(str(user_name), str(user_id), "user")
+                    self.tell_daddy(context, "register_allow_success", reply_markup=removekeyboard)
+                else:
+                    self.tell_daddy(context, r[1], reply_markup=removekeyboard)
+                self.state = "normal"
 
-        elif self.state == "register_remove":
-            self.deluser(str(update.effective_chat.id))
-            self.tell_daddy(context, "register_remove_success")
-            self.state = "normal"
+            elif self.state == "register_block":
+                r = self.moduser(str(user_name), str(user_id), "blocked")
+                if not r[0]:
+                    self.send_message(update, context, "register_denied", direct_id=user_id)
+                    self.tell_daddy(context, "register_block_success", reply_markup=removekeyboard)
+                else:
+                    self.tell_daddy(context, r[1], reply_markup=removekeyboard)
+                self.state = "normal"
+
+            elif self.state == "register_remove":
+                r = self.deluser(user_id)
+                if not r[0]:
+                    self.tell_daddy(context, "register_remove_success", reply_markup=removekeyboard)
+                else:
+                    self.tell_daddy(context, r[1], reply_markup=removekeyboard)
+                self.state = "normal"
