@@ -1,3 +1,20 @@
+Sub appendPrintCloseDeleteTxt()
+    myPath = "Z:\telegram_bot\pipe\"
+    
+    'Scan for text files
+    MyFile = Dir(myPath & "to_print*.txt")
+    If Len(MyFile) > 0 Then
+        add_text myPath & MyFile
+        print_now
+        On Error GoTo CloseProgram:
+            Kill myPath & MyFile
+    End If
+
+CloseProgram:
+    'Close document without saving
+    Application.Quit SaveChanges:=False
+End Sub
+
 Sub appendPrintCloseDelete()
     myPath = "Z:\telegram_bot\print\"
     
@@ -46,6 +63,21 @@ ErrHandler1:
     Exit Sub
 End Sub
 
+Sub add_text(MyFile)
+    On Error GoTo ErrHandler1:
+        Dim objStream, strData
+        Set objStream = CreateObject("ADODB.Stream")
+        objStream.Charset = "utf-8"
+        objStream.Open
+        objStream.LoadFromFile (MyFile)
+        strData = objStream.ReadText()
+        ActiveDocument.Content.InsertAfter Text:=strData
+        ActiveDocument.Range.Select
+        ActiveDocument.Range.Font.Name = "Font A"
+ErrHandler1:
+    Exit Sub
+End Sub
+
 Sub print_now()
     'Print the file without margins warning
     With Application
@@ -58,5 +90,3 @@ Sub print_now()
         .DisplayAlerts = wdAlertsAll
     End With
 End Sub
-
-

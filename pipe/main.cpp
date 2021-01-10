@@ -8,7 +8,6 @@ using namespace std;
 int main(){
 	ofstream myfile;
 	myfile.open ("/home/ostheer/.tg_bot_read_dir/toprint.txt");
-	myfile << "<F>";
 
 	while (!cin.eof())
 	{	
@@ -22,7 +21,6 @@ int main(){
 		myfile << line << endl;
 	}
 	
-	myfile << "</F>";
 	myfile.close();
 	system("/home/ostheer/.tg_bot_read_dir/send_file > /dev/null 2>&1 &");
 	return 0;

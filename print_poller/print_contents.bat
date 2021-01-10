@@ -13,6 +13,10 @@ if exist "z:\telegram_bot\print\*.docx" (
 "C:\Program Files\Microsoft Office\OFFICE12\WINWORD.EXE" empty_receipt.doc /mappendPrintCloseDelete
 )
 
+if exist "z:\telegram_bot\pipe\*.txt" (
+"C:\Program Files\Microsoft Office\OFFICE12\WINWORD.EXE" empty_receipt.doc /mappendPrintCloseDeleteTxt
+)
+
 CSCRIPT SLEEP.VBS 300
 
 goto loop
