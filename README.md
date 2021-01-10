@@ -51,7 +51,7 @@ Not necessarily in the correct order
 * On Linux, install `pip`, and via that install `python-telegram-bot`, `numpy`, `emoji`, `htmlparser`, `python-docx`, `pillow`, and `tinydb`.
 * Place `print_poller` and its content on `C:\`
 * Mount the VirtualBox shared folder on `Z:\`
-* Create the directories `Z:\telegram_bot\print` and `Z:\telegram_bot\queue`
+* Create the directories `Z:\telegram_bot\print`, `Z:\telegram_bot\queue` and `Z:\telegram_bot\pipe`
 * Execute `C:\print_poller\print_contents.bat` when Windows starts (e.g. by placing a shortcut in `C:\Documents and Settings\Admin\Start Menu\Programs\Startup`).
 * Place `suremark_tg_bot`, `ibmcallbacks.py` and `ibmprint.py` in `/opt/suremark_tg_bot`.
 * Do `chmod 755 /opt/suremark_tg_bot/suremark_tg_bot`.
