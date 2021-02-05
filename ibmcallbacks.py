@@ -174,6 +174,15 @@ class manager:
             self.send_message(update, context, "unauthorized")
 
     def command_sleep(self, update, context):
+        if update is None and context is None:
+            if self.asleep:
+                self.missed_messages = 0
+                self.printer.flushqueue()
+                self.asleep = False
+            else:
+                self.asleep = True
+            return
+        
         if self.accesslevel(update.effective_chat.id) == 2:
             if self.asleep:
                 self.tell_daddy(context, "sleep_state_left")

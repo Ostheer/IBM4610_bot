@@ -36,6 +36,12 @@ dispatcher.add_handler(MessageHandler(Filters.text,     manager.handle))
 dispatcher.add_handler(MessageHandler(Filters.photo,    manager.handle))
 dispatcher.add_handler(MessageHandler(Filters.document, manager.handle))
 
+#signal listener
+import signal
+def receive_signal(signum, stack):
+    manager.command_sleep()
+signal.signal(signal.SIGUSR2, receive_signal)
+
 
 attempts = 0
 while attempts < 5:
