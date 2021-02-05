@@ -42,6 +42,7 @@ The script `macro.vba` is embedded in the base template of the Microsoft Office 
 * Pipe any output from your terminal to the printer with `mark`!
 * Print png files without compression, ideal for extreme aspect ratios!
 * Using [Willus' excellent pdf reflower](https://www.willus.com/k2pdfopt/) you can print any pdf, such as scientific publications. Just do `k2pdfopt input.pdf -w 400 -h 1620 -dpi 167 -idpi -2 && pdftoppm input_k2opt.pdf -r 250 out -png` and then send the resulting images to your bot (as files). Make sure you have `k2pdfopt` and `pdftoppm` in your path.
+* Directly nuke the bot into sleep mode using ``` ssh host_machine "kill -USR2 \`pgrep suremark_tg_bot\`" ```
 
 ## Instructions
 Not necessarily in the correct order
