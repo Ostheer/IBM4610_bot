@@ -8,6 +8,7 @@ from uuid import uuid4
 from tinydb import where
 import time
 import threading
+import segno
 
 def suuid():
     return str(uuid4())
@@ -64,8 +65,8 @@ class pronter:
             uuid, filename = self.prepare_document(thing, doctype, caption)
             self.db.table("printqueue").insert({"uuid":uuid, "file":filename, "id":str(user_id), "time":time.time()})
             return False,
-        except:
-            return True,
+        except Exception as e:
+            return True, str(e)
 
     def prepare_document(self, thing, doctype, caption):
         uuid = suuid()
@@ -93,6 +94,15 @@ class pronter:
         elif doctype == 'docx':
             filename = uuid + "_direct" + ".docx"
             thing.download(self.qd + filename)
+            
+        elif doctype == 'qr':
+            document = Document()
+            imgf = self.qd + suuid() + ".png"
+            segno.make(thing).save(imgf, scale=50)
+            document.add_picture(imgf, width=Inches(2.75))
+            os.remove(imgf)
+            filename = uuid + ".docx"
+            document.save(self.qd + filename)
 
         return uuid, filename
     

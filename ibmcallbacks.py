@@ -207,53 +207,74 @@ class manager:
                 self.state = "database_modify"
         else:
             self.send_message(update, context, "unauthorized")
+
+    def command_qr(self, update, context):
+        self.handle_print(update, context, doctype="qr")
     
     def handle(self, update, context):
         if self.state.startswith("register") and self.accesslevel(update.effective_chat.id) == 2:
             self.register(update, context)
-
         elif self.state.startswith("database_modify") and self.accesslevel(update.effective_chat.id) == 2:
             self.modify_database(update, context)
-
         else:
-            if self.accesslevel(update.effective_chat.id) >= 1:
-                self.handle_print(update, context)
-            elif self.accesslevel(update.effective_chat.id) == 0:
-                self.send_message(update, context, "request_reply_unknown_user")
-                self.tell_daddy(context, str(update.effective_chat.first_name) + " (ID "+str(update.effective_chat.id)+") " + self.lang["print_attempt"], raw=True)
-                self.handle_print(update, context, tentative=True)
-                self.db.table("strangers").insert({"name":str(update.effective_chat.first_name)+" "+str(update.effective_chat.last_name), "id":str(update.effective_chat.id)})
-            elif self.accesslevel(update.effective_chat.id) == -1:
-                self.send_message(update, context, "request_reply_blocked_user") #HAHA LOSER
+            self.handle_print(update, context)
         
-    def handle_print(self, update, context, tentative=False):
-        try:
-            newFile = context.bot.get_file(update.message.sticker.file_id)
-            r = self.printer.new_job(newFile, doctype="photo", user_id=update.effective_chat.id)
-        except AttributeError:
+    def handle_print(self, update, context, doctype=None, tentative=False):
+        #check access level
+        if self.accesslevel(update.effective_chat.id) >= 1:
             pass
+        elif self.accesslevel(update.effective_chat.id) == 0:
+            self.send_message(update, context, "request_reply_unknown_user")
+            self.tell_daddy(context, str(update.effective_chat.first_name) + " (ID "+str(update.effective_chat.id)+") " + self.lang["print_attempt"], raw=True)
+            tentative=True
+            self.db.table("strangers").insert({"name":str(update.effective_chat.first_name)+" "+str(update.effective_chat.last_name), "id":str(update.effective_chat.id)})
+        elif self.accesslevel(update.effective_chat.id) == -1:
+            self.send_message(update, context, "request_reply_blocked_user") #HAHA LOSER
+            return
         
-        try:
-            newFile = context.bot.get_file(update.message.photo[-1].file_id)
-            r = self.printer.new_job(newFile, doctype="photo", caption=update.message.caption, user_id=update.effective_chat.id)
-        except (IndexError, AttributeError):
-            pass
-
-        if fileExtenstion(update) == "doc":
-            newFile = context.bot.get_file(update.message.document.file_id)
-            r = self.printer.new_job(newFile, doctype="doc", user_id=update.effective_chat.id)
-        elif  fileExtenstion(update) == "docx":
-            newFile = context.bot.get_file(update.message.document.file_id)
-            r = self.printer.new_job(newFile, doctype="docx", user_id=update.effective_chat.id)
-        elif  fileExtenstion(update) == "png":
-            newFile = context.bot.get_file(update.message.document.file_id)
-            r = self.printer.new_job(newFile, doctype="photo", user_id=update.effective_chat.id)
-        elif fileExtenstion(update) == "no_extension":
-            r = True,
+        def find_out_what_to_print():
+            try:
+                if not update.message.sticker.is_animated:
+                    newFile = context.bot.get_file(update.message.sticker.file_id)
+                    r = self.printer.new_job(newFile, doctype="photo", user_id=update.effective_chat.id)
+                    if not r[0]:
+                        return r
+                else:
+                    return True,
+            except AttributeError:
+                pass
+            
+            try:
+                newFile = context.bot.get_file(update.message.photo[-1].file_id)
+                r = self.printer.new_job(newFile, doctype="photo", caption=update.message.caption, user_id=update.effective_chat.id)
+                if not r[0]:
+                    return r
+            except (IndexError, AttributeError):
+                pass
+            
+            ext = fileExtenstion(update)
+            if ext in ("doc", "docx", "png"):
+                newFile = context.bot.get_file(update.message.document.file_id)
+                return self.printer.new_job(newFile, doctype=ext, user_id=update.effective_chat.id)
+            elif ext == "no_extension":
+                return True,
+            elif ext == "no_file":
+                return self.printer.new_job(update.message.text, doctype="text", user_id=update.effective_chat.id)
+            else:
+                return True, #unrecognised extension
         
-        if not "r" in locals():
-            r = self.printer.new_job(update.message.text, doctype="text", user_id=update.effective_chat.id)
-
+        if doctype is None:
+            #doctype not explicitly defined via telegram command
+            r = find_out_what_to_print()
+        elif doctype == "qr":
+            if len(update.message.text) > 3: #"\qr"
+                r = self.printer.new_job(update.message.text[4:], doctype="qr", user_id=update.effective_chat.id)
+            else:
+                r = True,
+        else:
+            r = (True, "Unrecognised doctype: '" + doctype + "'.")
+        
+        #respond to user
         if not r[0]:
             if not tentative:
                 self.send_message(update, context, "print_started")
@@ -268,6 +289,9 @@ class manager:
             else:
                 self.missed_messages += 1 
         else:
+            if len(r) > 1:
+                self.tell_daddy(context, "error_admin")
+                self.tell_daddy(context, r[1], raw=True)
             if not tentative:
                 self.send_message(update, context, "print_failed")
 

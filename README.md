@@ -42,13 +42,14 @@ The script `macro.vba` is embedded in the base template of the Microsoft Office 
 * Pipe any output from your terminal to the printer with `mark`!
 * Print png files without compression, ideal for extreme aspect ratios!
 * Using [Willus' excellent pdf reflower](https://www.willus.com/k2pdfopt/) you can print any pdf, such as scientific publications. Just do `k2pdfopt input.pdf -w 400 -h 1620 -dpi 167 -idpi -2 && pdftoppm input_k2opt.pdf -r 250 out -png` and then send the resulting images to your bot (as files). Make sure you have `k2pdfopt` and `pdftoppm` in your path.
+* Automatically convert anything into a qr code using the `\qr` command
 
 ## Instructions
 Not necessarily in the correct order
 * Install Windows XP and Office 2007 in the VM
 * Install the IBM printer driver, and make it the default printer
 * Embed the macro in Word by opening Word, pressing `Alt`+`F11` and pasting the code in a new script file.
-* On Linux, install `pip`, and via that install `python-telegram-bot`, `numpy`, `emoji`, `htmlparser`, `python-docx`, `pillow`, and `tinydb`.
+* On Linux, install `pip`, and via that install `python-telegram-bot`, `numpy`, `emoji`, `htmlparser`, `python-docx`, `pillow`, `segno` and `tinydb`.
 * Place `print_poller` and its content on `C:\`
 * Mount the VirtualBox shared folder on `Z:\`
 * Create the directories `Z:\telegram_bot\print`, `Z:\telegram_bot\queue` and `Z:\telegram_bot\pipe`
