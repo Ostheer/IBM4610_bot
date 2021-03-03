@@ -42,7 +42,11 @@ The script `macro.vba` is embedded in the base template of the Microsoft Office 
 * Pipe any output from your terminal to the printer with `mark`!
 * Print png files without compression, ideal for extreme aspect ratios!
 * Using [Willus' excellent pdf reflower](https://www.willus.com/k2pdfopt/) you can print any pdf, such as scientific publications. Just do `k2pdfopt input.pdf -w 400 -h 1620 -dpi 167 -idpi -2 && pdftoppm input_k2opt.pdf -r 250 out -png` and then send the resulting images to your bot (as files). Make sure you have `k2pdfopt` and `pdftoppm` in your path.
+<<<<<<< HEAD
 * Automatically convert anything into a qr code using the `\qr` command
+=======
+* Directly nuke the bot into sleep mode using ``` ssh host_machine "kill -USR2 \`pgrep suremark_tg_bot\`" ```
+>>>>>>> 8687f83a1666f9ba8dd2681e5f36da7ff4104767
 
 ## Instructions
 Not necessarily in the correct order
@@ -62,6 +66,8 @@ Not necessarily in the correct order
 * For unicode support it may be necessary to enable *Microsoft Scripting Runtime* in `Microsoft Visual Basic>Tools>References`
 * Uncheck *Cable Connected* in Virtualbox settings>Network to isolate the VM
 * For Emoji support, install an emoji font (such as Segoe UI Emoji, `seguiemj.ttf`). Make sure its name matches that in the `.ini`-file.
+* Directly nuke the bot into sleep mode using ``` ssh host_machine "kill -USR2 \`pgrep suremark_tg_bot\`" ```
+* Automatically convert anything into a qr code using the `\qr` command
 
 ## Tips
 You can enable RDP for your Windows XP VM for easier administration.

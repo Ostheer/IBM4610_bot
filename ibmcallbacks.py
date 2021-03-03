@@ -173,7 +173,7 @@ class manager:
         else:
             self.send_message(update, context, "unauthorized")
 
-    def command_sleep(self, update, context):
+    def command_sleep(self, update=None, context=None):
         if update is None and context is None:
             if self.asleep:
                 self.missed_messages = 0
