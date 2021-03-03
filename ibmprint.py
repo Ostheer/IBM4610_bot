@@ -98,7 +98,7 @@ class pronter:
         elif doctype == 'qr':
             document = Document()
             imgf = self.qd + suuid() + ".png"
-            segno.make(thing).save(imgf, scale=50)
+            segno.make(thing, micro=False).save(imgf, scale=50)
             document.add_picture(imgf, width=Inches(2.75))
             os.remove(imgf)
             filename = uuid + ".docx"
