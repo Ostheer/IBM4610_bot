@@ -63,8 +63,6 @@ Not necessarily in the correct order
 * For unicode support it may be necessary to enable *Microsoft Scripting Runtime* in `Microsoft Visual Basic>Tools>References`
 * Uncheck *Cable Connected* in Virtualbox settings>Network to isolate the VM
 * For Emoji support, install an emoji font (such as Segoe UI Emoji, `seguiemj.ttf`). Make sure its name matches that in the `.ini`-file.
-* Directly nuke the bot into sleep mode using ``` ssh host_machine "kill -USR2 \`pgrep suremark_tg_bot\`" ```
-* Automatically convert anything into a qr code using the `\qr` command
 
 ## Tips
 You can enable RDP for your Windows XP VM for easier administration.
