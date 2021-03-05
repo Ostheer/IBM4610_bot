@@ -23,6 +23,7 @@ updater = Updater(token=config["ADMIN"]["key"], use_context=True)
 dispatcher = updater.dispatcher
 
 commands = {"start":     (comm.start,     0),
+            "help":      (comm.help,      0),
             "qr":        (comm.qr,        1),
             "template":  (comm.template,  1),
             "sleep":     (comm.sleep,     2),

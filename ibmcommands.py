@@ -22,6 +22,13 @@ class start(commandhandler):
         self.manager.db.table("strangers").insert({"name":str(update.effective_chat.first_name)+" "+str(update.effective_chat.last_name), "id":str(update.effective_chat.id)})
 
 
+class help(commandhandler):
+    def do(self, update, context):
+        utype = self.manager.accesslevel(update.effective_chat.id)
+        hlp = self.manager.cf["HELP"]["level_" + str(utype)]
+        self.manager.send_message(update, context, hlp, raw=True)
+
+
 class cancel(commandhandler):
     def callback(self, update, context):
         if self.manager.state != "normal":
