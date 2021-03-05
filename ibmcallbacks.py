@@ -230,7 +230,7 @@ class manager:
             mkb = lambda s: "Name: {0}\n ID: {1}".format(s["name"], s["id"])
 
             if update.message.text == self.lang["register_allow"]:
-                self.tell_daddy(context, "register_allow_who", reply_markup=telegram.ReplyKeyboardRemove())
+                self.tell_daddy(context, "register_allow_who")
                 users = self.db.table("strangers").all()
                 users.extend(self.db.table("users").search(where("type") == "blocked"))
                 custom_keyboard = [[mkb(users[i])] for i in range(len(users))]
@@ -238,7 +238,7 @@ class manager:
                 self.tell_daddy(context, "register_allow_choose", reply_markup=telegram.ReplyKeyboardMarkup(custom_keyboard))
                 self.state = "register_allow"
             elif update.message.text == self.lang["register_block"]:
-                self.tell_daddy(context, "register_block_who", reply_markup=telegram.ReplyKeyboardRemove())
+                self.tell_daddy(context, "register_block_who")
                 users = self.db.table("strangers").all()
                 users.extend(self.db.table("users").all())
                 custom_keyboard = [[mkb(users[i])] for i in range(len(users))]
@@ -246,7 +246,7 @@ class manager:
                 self.tell_daddy(context, "register_block_choose", reply_markup=telegram.ReplyKeyboardMarkup(custom_keyboard))
                 self.state = "register_block"
             elif update.message.text == self.lang["register_remove"]:
-                self.tell_daddy(context, "register_remove_who", reply_markup=telegram.ReplyKeyboardRemove())
+                self.tell_daddy(context, "register_remove_who")
                 users = self.db.table("users").all()
                 custom_keyboard = [[mkb(users[i])] for i in range(len(users))]
                 custom_keyboard.append(["/cancel"])
