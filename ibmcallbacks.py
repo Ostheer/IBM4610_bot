@@ -5,9 +5,6 @@ from tinydb import Query
 import tinydb.operations as tdop
 from tinydb import where
 
-def nows():
-    return str(datetime.datetime.now())
-
 def fileExtenstion(update):
     try:
         return update.message.document.file_name.split('.')[-1]
@@ -33,11 +30,9 @@ class manager:
 
         if not "users" in self.db.tables():
             users = self.db.table("users")
-            users.insert({"name":"admin", "id":self.cf["ADMIN"]["admin_id"], "type":"admin", "added":nows(), "N":0})
+            users.insert({"name":"admin", "id":self.cf["ADMIN"]["admin_id"], "type":"admin", "added":str(datetime.datetime.now()), "N":0})
             #TODO: check if admin ID has been updated in config file
 
-
-    ### helper functions
     def moduser(self, name, user_id, utype):
         user_id = str(user_id)
         User = Query()
@@ -47,7 +42,7 @@ class manager:
 
         if len(r) == 0:
             #add new user
-            t.insert({"name":name, "id":user_id, "type":utype, "added":nows(), "N":0})
+            t.insert({"name":name, "id":user_id, "type":utype, "added":str(datetime.datetime.now()), "N":0})
             #remove from strangers
             self.db.table("strangers").remove(where("id") == user_id)
             return False,
@@ -80,12 +75,7 @@ class manager:
                 return True, "register_block_error_admin"
     
     def accesslevel(self, user_id):
-        """
-        -1: banned
-         0: stranger
-         1: allowed
-         2: admin
-        """
+        # -1: banned, 0: stranger, 1: allowed, 2: admin
         user_id = str(user_id)
         t = self.db.table("users")
         r = t.search(Query().id == user_id)
@@ -101,7 +91,21 @@ class manager:
                 return 1
             elif utype == "admin":
                 return 2
-    
+            
+    def toggle_sleep(self, update, context, send_messages=False):
+        if self.asleep:
+            if send_messages:
+                #TODO: Tell who sent you a fax
+                self.tell_daddy(context, "sleep_state_left")
+                self.tell_daddy(context, self.lang["sleep_state_left_summary"].replace("NUM_MISSED_MESSAGES", str(self.missed_messages)), raw=True)
+            self.missed_messages = 0
+            self.printer.flushqueue()
+            self.asleep = False
+        else:
+            if send_messages:
+                self.tell_daddy(context, "sleep_state_entered")
+            self.asleep = True
+            
     def send_message(self, update, context, string, raw=False, **kwargs):
         try:
             if "direct_id" in kwargs:
@@ -133,83 +137,6 @@ class manager:
         
     def tell_daddy(self, context, string, **kwargs):
         return self.send_message(None, context, string, direct_id=self.cf["ADMIN"]["admin_id"], **kwargs)
-
-
-    def command_start(self, update, context):
-        self.send_message(update, context, "start_reply")
-        self.tell_daddy(context, str(update.effective_chat.first_name) + " (ID "+str(update.effective_chat.id)+") " + self.lang["start_request"], raw=True)
-        self.db.table("strangers").insert({"name":str(update.effective_chat.first_name)+" "+str(update.effective_chat.last_name), "id":str(update.effective_chat.id)})
-    
-    def command_cancel(self, update, context):
-        if self.accesslevel(update.effective_chat.id) == 2:
-            if self.state != "normal":
-                self.tell_daddy(context, "cancelled", reply_markup=telegram.ReplyKeyboardRemove())
-                self.state = "normal"
-            else:
-                self.tell_daddy(context, "cancel_failed")
-        else:
-            self.send_message(update, context, "unauthorized")
-
-    def command_register(self, update, context):
-        if self.accesslevel(update.effective_chat.id) == 2:
-            if self.state == "normal":
-                custom_keyboard = [[self.lang["register_allow"]], [self.lang["register_block"]], [self.lang["register_remove"]]]
-                custom_keyboard.append(["/cancel"])
-                reply_markup = telegram.ReplyKeyboardMarkup(custom_keyboard)
-                self.tell_daddy(context, "request_what", reply_markup=reply_markup)
-                self.state = "register"
-        else:
-            self.send_message(update, context, "unauthorized")
-
-    def command_template(self, update, context):
-        if self.accesslevel(update.effective_chat.id) >= 1:
-            try:
-                context.bot.send_document(chat_id=update.effective_chat.id, document=open(self.cf["RESOURCES"]["template_doc"], 'rb'))
-                self.send_message(update, context, "template_doc_sent")
-            except FileNotFoundError as e:
-                self.send_message(update, context, "error_user")
-                self.tell_daddy(context, "error_admin")
-                self.tell_daddy(context, str(e), raw=True)
-        else:
-            self.send_message(update, context, "unauthorized")
-
-    def command_sleep(self, update=None, context=None):
-        if update is None and context is None:
-            if self.asleep:
-                self.missed_messages = 0
-                self.printer.flushqueue()
-                self.asleep = False
-            else:
-                self.asleep = True
-            return
-        
-        if self.accesslevel(update.effective_chat.id) == 2:
-            if self.asleep:
-                self.tell_daddy(context, "sleep_state_left")
-                self.tell_daddy(context, self.lang["sleep_state_left_summary"].replace("NUM_MISSED_MESSAGES", str(self.missed_messages)), raw=True)
-                #TODO: Tell who sent you a fax
-                self.missed_messages = 0
-                self.printer.flushqueue()
-                self.asleep = False
-            else:
-                self.tell_daddy(context, "sleep_state_entered")
-                self.asleep = True
-        else:
-            self.send_message(update, context, "unauthorized")
-
-    def command_database(self, update, context):
-        if self.accesslevel(update.effective_chat.id) == 2:
-            if self.state == "normal":
-                custom_keyboard = [[self.lang["database_load"]], [self.lang["database_dump"]]]
-                custom_keyboard.append(["/cancel"])
-                reply_markup = telegram.ReplyKeyboardMarkup(custom_keyboard)
-                self.tell_daddy(context, "request_what", reply_markup=reply_markup)
-                self.state = "database_modify"
-        else:
-            self.send_message(update, context, "unauthorized")
-
-    def command_qr(self, update, context):
-        self.handle_print(update, context, doctype="qr")
     
     def handle(self, update, context):
         if self.state.startswith("register") and self.accesslevel(update.effective_chat.id) == 2:
@@ -264,7 +191,6 @@ class manager:
                 return True, #unrecognised extension
         
         if doctype is None:
-            #doctype not explicitly defined via telegram command
             r = find_out_what_to_print()
         elif doctype == "qr":
             if len(update.message.text) > 3: #"\qr"

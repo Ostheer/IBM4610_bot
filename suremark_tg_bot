@@ -8,47 +8,38 @@ import telegram
 from telegram.ext import Updater
 from telegram.ext import CommandHandler
 from telegram.ext import MessageHandler, Filters
-import logging
 import configparser
-import ibmcallbacks as ibm
 from tinydb import TinyDB
+import ibmcallbacks as ibm
+import ibmcommands as comm
+import signal
 
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 config = configparser.ConfigParser()
 config.read(configfile)
 db = TinyDB(config["ADMIN"]["database_file"])
 
 manager = ibm.manager(db, config)
-
-
 updater = Updater(token=config["ADMIN"]["key"], use_context=True)
 dispatcher = updater.dispatcher
 
-dispatcher.add_handler(CommandHandler('start',      manager.command_start))
-dispatcher.add_handler(CommandHandler('cancel',     manager.command_cancel))
-dispatcher.add_handler(CommandHandler('register',   manager.command_register))
-dispatcher.add_handler(CommandHandler('template',   manager.command_template))
-dispatcher.add_handler(CommandHandler('sleep',      manager.command_sleep))
-dispatcher.add_handler(CommandHandler('database',   manager.command_database))
-dispatcher.add_handler(CommandHandler('qr',         manager.command_qr))
+commands = {"start":     (comm.start,     0),
+            "qr":        (comm.qr,        1),
+            "template":  (comm.template,  1),
+            "sleep":     (comm.sleep,     2),
+            "database":  (comm.database,  2),
+            "cancel":    (comm.cancel,    2),
+            "register":  (comm.register,  2)}
 
-dispatcher.add_handler(MessageHandler(Filters.sticker,  manager.handle))
-dispatcher.add_handler(MessageHandler(Filters.text,     manager.handle))
-dispatcher.add_handler(MessageHandler(Filters.photo,    manager.handle))
-dispatcher.add_handler(MessageHandler(Filters.document, manager.handle))
+for command, (handler, clearance) in commands.items():
+    dispatcher.add_handler(CommandHandler(command, handler(clearance, manager).do))
 
-#signal listener
-import signal
-def receive_signal(signum, stack):
-    manager.command_sleep()
-signal.signal(signal.SIGUSR2, receive_signal)
+for f in (Filters.sticker, Filters.text, Filters.photo, Filters.document):
+    dispatcher.add_handler(MessageHandler(f,  manager.handle))
 
+signal.signal(signal.SIGUSR2, lambda x, y: manager.toggle_sleep(None, None, send_messages=False))
 
-attempts = 0
-while attempts < 5:
+for i in range(20):
     try:
-        #TODO: This seems to hog one thread to 100%
         updater.start_polling()
     except telegram.error.NetworkError:
         time.sleep(10)
-        attempts = attempts + 1
