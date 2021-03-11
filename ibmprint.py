@@ -77,7 +77,7 @@ class pronter:
             filename = uuid + ".docx"
             document.save(self.qd + filename)
 
-        elif doctype == 'photo':
+        elif doctype == 'photo' or doctype == 'png':
             document = Document()
             imgf = self.save_image(thing)
             document.add_picture(imgf, width=Inches(2.75))
