@@ -88,4 +88,6 @@ See the Arch Wiki for details: https://wiki.archlinux.org/index.php/Unified_Exte
 I don't own any rights to the IBM driver. Consider it abandonware.
 Same goes for the Segoe Emoji font.
 
+The program `print_poller/millisleep.exe` is made by [Eli Fulkerson](https://elifulkerson.com/projects/millisleep.php).
+
 
