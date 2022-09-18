@@ -1,9 +1,8 @@
 python-telegram-bot
 numpy
-emoji==1.7.0
+emoji<2
 htmlparser
 python-docx
 pillow
 segno
 tinydb
-
