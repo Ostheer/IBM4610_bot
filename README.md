@@ -40,7 +40,7 @@ Lastly it deletes the file and terminates Word.
 * User help command
 
 ## Installation
-### Linux
+### Linux / Server
 1. Review `src/linux/*.service`, `src/opt/suremark.py` and `src/config/config.ini`: replace `>>>USERNAME<<<` with the username that will be running the bot on the server.
 2. In `config.ini`, also place your telegram bot token and user id.
 3. Verify you have `virtualenv` installed on your system, and run `source install`.
@@ -65,7 +65,7 @@ Lastly it deletes the file and terminates Word.
 ## The Mark Pipe
 Allows you to pipe any `stdout` to your printer, such as `ls | mark`.
 
-### On the user/client computer
+### Linux / Client
 * Review `src/pipe/suremark_pipe/send_file`; change folder locations and server address.
 * Review `src/pipe/main.cpp`; update the username.
 * Make sure you have ssh access to your server with a (passwordless) key pair.
