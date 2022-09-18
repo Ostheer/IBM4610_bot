@@ -1,32 +1,25 @@
-# ⚡️💯🔥✅SnapFax✅🔥💯⚡️: Making faxing trendy again!
-
-Telegram bot and Windows scripts to automatically print text messages in Telegram on an IBM SureMark receipt printer.
-This version of the SureMark 4610 unfortunately only has USB and a proprietary protocol, so it doesn't work natively on Linux. Therefore, the only way to get it to print anything is using some windows 16-bit executable.
-
-I had an old crappy Windows Tablet lying around collecting dust, so I repurposed it.
-
-Now it's a crappy tablet printing Word 2007 documents via Telegram Running Windows XP in Virtualbox on Arch Linux!
+# SureMark Telegram Fax Bot
+Telegram bot and Microsoft Office macro to automatically print text messages in Telegram on an IBM SureMark receipt printer.
+This version of the SureMark 4610 unfortunately only has USB and a proprietary protocol, so it doesn't work natively on Linux or any modern OS. 
+Therefore, the only way to get it to print anything is using some windows 16-bit executable.
 
 
-| The printer | The tablet | Samples |
-|------------|-------------|-------------|
-| ![IBM Printer](readme_images/SureMark.png) | ![Lamina Tablet](readme_images/Lamina.jpg) | ![Print Samples](readme_images/prints.jpg) |
+| The printer | Samples |
+|-------------|---------|
+| ![IBM Printer](readme_images/SureMark.png) | ![Print Samples](readme_images/prints.jpg) |
 
 ## Basic Setup
+The SureMark is physically connected to a Raspberry Pi, which exposes the usb interface to an x86 Linux server using [usbip](http://usbip.sourceforge.net/).
+On the Linux server, a virtual machine is running Windows XP.
+The python code is also running on the Linux Server.
+Whenever the user sends a text message, the bot creates a `.docx` file in a shared folder with the VM.
 
-Linux machine running Windows XP (32 bit) in a VM, with a shared folder (`Z:\` in Windows).
+On Windows, a batch script polls the folder every 500 ms.
+If it encounters the Word document, it starts Microsoft Word 2007 using a specific macro.
 
-The Python telegram bot runs on Linux.
-Whenever the user sends a text message, it creates a file `to_printN.extension` in a shared folder.
-
-The batch script `print_contents.bat` polls the folder every 500ms.
-If it encounters `to_printN.{doc(x), txt, bmp}`, it starts Microsoft Word 2007 using a specific macro (`macro.vba`).
-
-The macro reads the `to_print*` file and opens it or appends it to `empty_receipt.doc`.
+The macro loads the document file and appends it to an empty document which has the right page format and margins for the printer.
 The macro then prints the document, suppressing any errors or warnings (about margins).
 Lastly it deletes the file and terminates Word.
-
-The script `macro.vba` is embedded in the base template of the Microsoft Office installation, so the file is not explicitly present on the system.
 
 ## Features
 * Temporarily disable printing, using the `/sleep` command
@@ -34,60 +27,60 @@ The script `macro.vba` is embedded in the base template of the Microsoft Office 
 * Print unicode text. Including EMOJI 👁👅👁!!
 * Print images (with captions), automatically converted to black and white bitmaps.
 * Print Microsoft Office `.doc` and `.docx` files.
-* Request a template Microsoft Office `.doc` file with the correct paper size.
+* Request a template Microsoft Office `.docx` file with the correct paper size.
 * Get notified when you receive a fax.
 * Supports faxing stickers (remapping transparency to white)
 * Print superfast using a resident font, using the \<F\> html-style tag
 * Print numbers as EAN-13 barcode using the \<BAR\> tag
 * Pipe any output from your terminal to the printer with `mark`!
 * Print png files without compression, ideal for extreme aspect ratios!
-* Using [Willus' excellent pdf reflower](https://www.willus.com/k2pdfopt/) you can print any pdf, such as scientific publications. Just do `k2pdfopt input.pdf -w 400 -h 1620 -dpi 167 -idpi -2 && pdftoppm input_k2opt.pdf -r 250 out -png` and then send the resulting images to your bot (as files). Make sure you have `k2pdfopt` and `pdftoppm` in your path.
+* Using [Willus' pdf reflower](https://www.willus.com/k2pdfopt/) you can print any pdf, such as two-column scientific publications. Just do `k2pdfopt input.pdf -w 400 -h 1620 -dpi 167 -idpi -2 && pdftoppm input_k2opt.pdf -r 250 out -png` and then send the resulting images to your bot (as files). Make sure you have `k2pdfopt` and `pdftoppm` in your path.
 * Automatically convert anything into a qr code using the `\qr` command
-* Directly nuke the bot into sleep mode using ``` ssh host_machine "kill -USR2 \`pgrep suremark_tg_bot\`" ```
+* Directly put the bot in sleep mode using `ssh SERVER "pkill -USR2 suremark"`. Can be used with Apple's automation system to mute the SureMark while your phone is on Don't Disturb.
 * User help command
 
-## Instructions
-Not necessarily in the correct order
-* Install Windows XP and Office 2007 in the VM
-* Install the IBM printer driver, and make it the default printer
-* Embed the macro in Word by opening Word, pressing `Alt`+`F11` and pasting the code in a new script file.
-* On Linux, install `pip`, and via that install `python-telegram-bot`, `numpy`, `emoji`, `htmlparser`, `python-docx`, `pillow`, `segno` and `tinydb`.
-* Place `print_poller` and its content on `C:\`
-* Mount the VirtualBox shared folder on `Z:\`
-* Create the directories `Z:\telegram_bot\print`, `Z:\telegram_bot\queue` and `Z:\telegram_bot\pipe`
-* Execute `C:\print_poller\print_contents.bat` when Windows starts (e.g. by placing a shortcut in `C:\Documents and Settings\Admin\Start Menu\Programs\Startup`).
-* Place `suremark_tg_bot`, `ibmcallbacks.py` and `ibmprint.py` in `/opt/suremark_tg_bot`.
-* Do `chmod 755 /opt/suremark_tg_bot/suremark_tg_bot`.
-* Edit the `*.service` files to include your linux username and place them in `/etc/systemd/system` and enable them. The VM service is enabled with `sudo systemctl enable vboxvmservice@VM_UUID.service`. You can get this UUID with `VBoxManage list vms`.
-* Edit `suremark_tg_bot` to point to your `.ini` file
-* Use `setterm --blank `{`force` or `poke`}` --term linux </dev/tty1` to turn off the screen
-* For unicode support it may be necessary to enable *Microsoft Scripting Runtime* in `Microsoft Visual Basic>Tools>References`
-* Uncheck *Cable Connected* in Virtualbox settings>Network to isolate the VM
-* For Emoji support, install an emoji font (such as Segoe UI Emoji, `seguiemj.ttf`). Make sure its name matches that in the `.ini`-file.
+## Installation
+### Linux
+1. Review `src/linux/*.service`, `src/opt/suremark.py` and `src/config/config.ini`: replace `>>>USERNAME<<<` with the username that will be running the bot on the server.
+2. In `config.ini`, also place your telegram bot token and user id.
+3. Verify you have `virtualenv` installed on your system, and run `source install`.
+
+4. Create a new machine in Virtualbox.
+5. Uncheck *Cable Connected* in `Virtualbox settings>Network` to isolate the VM.
+6. Map `~/.config/suremark/shared` as a shared auto-mounting folder to `Z:\` in the guest.
+
+7. Enable the systemd units. For `vboxvmservice`, you need to specify the machine UUID as follows: `systemctl enable vboxvmservice@VM_UUID.service`. You can get this UUID from `VBoxManage list vms`.
+
+### Windows / Virtual Machine
+1. Install Windows XP (32 bit).
+2. Install the IBM printer driver, and make it the default printer.
+3. Install Microsoft Office 2007.
+4. Embed the macro in Word by opening Word, pressing `Alt`+`F11` and pasting the code in a new script file.
+5. Enable *Microsoft Scripting Runtime* in `Microsoft Visual Basic>Tools>References`.
+6. Copy `src/windows/suremark` and its content to `C:\`.
+7. Execute `C:\suremark\poller.bat` when Windows starts (e.g. by placing a shortcut in `C:\Documents and Settings\All Users\Start Menu\Programs\Startup`).
+8. For Emoji support, install an emoji font (such as Segoe UI Emoji, `seguiemj.ttf`, make sure its name matches that in the `.ini`-file). Go to `Control Panel>Fonts` and drag & drop the `.ttf` file.
+
+
+## The Mark Pipe
+Allows you to pipe any `stdout` to your printer, such as `ls | mark`.
+
+### On the user/client computer
+* Review `src/pipe/suremark_pipe/send_file`; change folder locations and server address.
+* Review `src/pipe/main.cpp`; update the username.
+* Make sure you have ssh access to your server with a (passwordless) key pair.
+* Go to `src/pipe` and run `source install`.
+
 
 ## Tips
 You can enable RDP for your Windows XP VM for easier administration.
-1. Shut down your VMs
-2. Install the required Virtualbox extension pack: `VBoxManage extpack install Oracle*.vbox-extpack`
-3. Execute `VBoxManage modifyvm "Windows XP" --vrde on`
-4. RDP in, e.g. by `xfreerdp /v:ADDRESS_OF_HOST`
-5. Consider turning it off again for safety
+1. Shut down your VMs.
+2. Install the required Virtualbox extension pack: `VBoxManage extpack install Oracle*.vbox-extpack`.
+3. Execute `VBoxManage modifyvm "Windows XP" --vrde on`.
+4. RDP in, e.g. by `xfreerdp /v:SERVER`.
+5. Consider turning it off again.
+
 
 ## TODO
-* Add automatic services. Printing reddit posts, weather.. Perhaps via RSS
-
-## Installing Linux on the tablet
-The Lamina tablet uses a cheap Atom-chipset that doesn't support the regular 64 bit EFI bootfiles.
-This is the case for many of these no-name Chinese Windows tablets from the Windows 8 launch era.
-Therefore, it is necessary to use a standalone GRUB IA32 EFI file to chainload the Linux installer.
-
-See the Arch Wiki for details: https://wiki.archlinux.org/index.php/Unified_Extensible_Firmware_Interface#Booting_64-bit_kernel_on_32-bit_UEFI
-
-
-## Notes
-I don't own any rights to the IBM driver. Consider it abandonware.
-Same goes for the Segoe Emoji font.
-
-The program `print_poller/millisleep.exe` is made by [Eli Fulkerson](https://elifulkerson.com/projects/millisleep.php).
-
+* Add automatic services. Printing reddit posts, weather.. Perhaps via RSS.
 

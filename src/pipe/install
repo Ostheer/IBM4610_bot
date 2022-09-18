@@ -1,0 +1,3 @@
+cp -r suremark_pipe ~/.config/
+g++ main.cpp -o ~/.local/bin/mark
+

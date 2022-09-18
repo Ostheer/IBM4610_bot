@@ -7,7 +7,7 @@ using namespace std;
 
 int main(){
 	ofstream myfile;
-	myfile.open ("/home/ostheer/.tg_bot_read_dir/toprint.txt");
+	myfile.open ("/home/>>>USERNAME<<</.config/suremark_pipe/buffer/toprint.txt");
 
 	while (!cin.eof())
 	{	
@@ -22,6 +22,7 @@ int main(){
 	}
 	
 	myfile.close();
-	system("/home/ostheer/.tg_bot_read_dir/send_file > /dev/null 2>&1 &");
+	system("/home/>>>USERNAME<<</.config/suremark_pipe/send_file > /dev/null 2>&1 &");
 	return 0;
 }
+

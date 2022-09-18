@@ -1,7 +1,5 @@
-#!/bin/python
-
 ### EDIT THIS LINE
-configfile = "/home/ostheer/Documents/git_projects/IBM4610_bot/suremark_tg_bot.ini"
+configfile = "/home/>>>USERNAME<<</.config/suremark/config.ini"
 
 import time
 import telegram
@@ -44,3 +42,4 @@ for i in range(20):
         updater.start_polling()
     except telegram.error.NetworkError:
         time.sleep(10)
+

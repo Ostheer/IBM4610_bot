@@ -1,0 +1,9 @@
+python-telegram-bot
+numpy
+emoji==1.7.0
+htmlparser
+python-docx
+pillow
+segno
+tinydb
+

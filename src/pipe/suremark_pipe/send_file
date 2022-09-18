@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 
+# TODO: Prevent file in buffer from being overwritten
+
 # script folder
-sf=~/.tg_bot_read_dir/
-# SSH host
-host=lamina
-# remote folder (relative to remote home)
-rf=VirtualBox\\\ VMs/Windows\\\ XP/shared/telegram_bot/
+sf=~/.config/suremark_pipe/buffer/
+# address of server
+host=SERVER
+# remote destination folder (relative to remote home)
+rf=.config/suremark/shared/suremark/pipe/
 # remote filename base
 fb=to_print
 
@@ -20,3 +22,4 @@ if [ -f "${sf}toprint.txt" ]; then
 	scp "${sf}toprint.txt" "${host}":"${rf}""${fb}""${i}".txt
 	rm "${sf}toprint.txt"
 fi
+

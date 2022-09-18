@@ -1,0 +1,15 @@
+sudo true
+
+cp -r ./src/config ~/.config/suremark
+pushd ~/.config/suremark
+virtualenv venv
+source venv/bin/activate
+pip install -r requirements.txt
+deactivate
+popd
+
+sudo cp -r ./src/opt /opt/suremark
+
+chmod 644 ./src/linux/*.service 
+sudo cp ./src/linux/*.service /etc/systemd/system/
+

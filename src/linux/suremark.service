@@ -5,8 +5,9 @@ After=systemd-modules-load.service network-online.target
 Wants=network-online.target
 
 [Service]
-User=ostheer
-ExecStart=/opt/suremark_tg_bot/suremark_tg_bot
+User=>>>USERNAME<<<
+WorkingDirectory=/opt/suremark
+ExecStart=/home/>>>USERNAME<<</.config/suremark/venv/bin/python /opt/suremark/suremark.py
 
 [Install]
 WantedBy=multi-user.target

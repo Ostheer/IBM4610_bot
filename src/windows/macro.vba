@@ -1,5 +1,5 @@
 Sub appendPrintCloseDeleteTxt()
-    myPath = "Z:\telegram_bot\pipe\"
+    myPath = "Z:\suremark\pipe\"
     
     'Scan for text files
     MyFile = Dir(myPath & "to_print*.txt")
@@ -16,7 +16,7 @@ CloseProgram:
 End Sub
 
 Sub appendPrintCloseDelete()
-    myPath = "Z:\telegram_bot\print\"
+    myPath = "Z:\suremark\print\"
     
     'Scan for text files
     MyFile = Dir(myPath & "*.docx")
