@@ -48,8 +48,10 @@ Lastly it deletes the file and terminates Word.
 4. Create a new machine in Virtualbox.
 5. Uncheck *Cable Connected* in `Virtualbox settings>Network` to isolate the VM.
 6. Map `~/.config/suremark/shared` as a shared auto-mounting folder to `Z:\` in the guest.
+7. Install the VirtualBox extension pack; `VBoxManage extpack install Oracle*.vbox-extpack`.
+8. Create a device filter for passing through the usb device to the VM.
 
-7. Enable the systemd units. For `vboxvmservice`, you need to specify the machine UUID as follows: `systemctl enable vboxvmservice@VM_UUID.service`. You can get this UUID from `VBoxManage list vms`.
+9. Enable the systemd units. For `vboxvmservice`, you need to specify the machine UUID as follows: `systemctl enable vboxvmservice@VM_UUID.service`. You can get this UUID from `VBoxManage list vms`.
 
 ### Windows / Virtual Machine
 1. Install Windows XP (32 bit).
@@ -60,6 +62,19 @@ Lastly it deletes the file and terminates Word.
 6. Copy `src/windows/suremark` and its content to `C:\`.
 7. Execute `C:\suremark\poller.bat` when Windows starts (e.g. by placing a shortcut in `C:\Documents and Settings\All Users\Start Menu\Programs\Startup`).
 8. For Emoji support, install an emoji font (such as Segoe UI Emoji, `seguiemj.ttf`, make sure its name matches that in the `.ini`-file). Go to `Control Panel>Fonts` and drag & drop the `.ttf` file.
+
+### USB-over-IP
+When you can't connect the printer to the server physically, you can connect it to anything else running Linux, and virtually connect it to the server using usbip.
+
+**usbip server**
+1. Install `usbip`.
+2. Copy `src/raspberry/suremark_usbip.service` to `/etc/systemd/system` and enable & start it. Verify that the usb vendor and product ID's are correct.
+
+**usbip client**
+1. Install `usbip`.
+2. Run `sudo modprobe vhci-hcd`.
+3. List the available usb devices on the server; `usbip list -r SERVER`.
+4. Attach the printer, e.g. `sudo usbip attach -r SERVER -b 1-1.2`.
 
 
 ## The Mark Pipe
@@ -75,10 +90,9 @@ Allows you to pipe any `stdout` to your printer, such as `ls | mark`.
 ## Tips
 You can enable RDP for your Windows XP VM for easier administration.
 1. Shut down your VMs.
-2. Install the required Virtualbox extension pack: `VBoxManage extpack install Oracle*.vbox-extpack`.
-3. Execute `VBoxManage modifyvm "Windows XP" --vrde on`.
-4. RDP in, e.g. by `xfreerdp /v:SERVER`.
-5. Consider turning it off again.
+2. Execute `VBoxManage modifyvm "Windows XP" --vrde on`.
+3. RDP in, e.g. by `xfreerdp /v:SERVER`.
+4. Consider turning it off again.
 
 
 ## TODO
