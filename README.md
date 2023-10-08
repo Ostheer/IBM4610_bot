@@ -68,7 +68,8 @@ When you can't connect the printer to the server physically, you can connect it 
 
 **usbip server**
 1. Install `usbip`.
-2. Copy `src/raspberry/suremark_usbip.service` to `/etc/systemd/system` and enable & start it. Verify that the usb vendor and product ID's are correct.
+2. Copy `src/raspberry/usbipd@.service` to `/etc/systemd/system`.
+3. Enable and start with `usbipd@04b3:4535.service`, verify with lsusb that the usb vendor and product ID's are correct.
 
 **usbip client**
 1. Install `usbip`.
