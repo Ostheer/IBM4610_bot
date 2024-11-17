@@ -91,9 +91,11 @@ Allows you to pipe any `stdout` to your printer, such as `ls | mark`.
 ## Tips
 You can enable RDP for your Windows XP VM for easier administration.
 1. Shut down your VMs.
-2. Execute `VBoxManage modifyvm "Windows XP" --vrde on`.
-3. RDP in, e.g. by `xfreerdp /v:SERVER`.
-4. Consider turning it off again.
+2. Download the extpack from [Oracle](https://download.virtualbox.org/virtualbox/)
+3. Install extpack: `vboxmanage extpack install ep.vbox-extpack`
+4. Execute `VBoxManage modifyvm "Windows XP" --vrde on`.
+5. RDP in, e.g. by `wlfreerdp /v:SERVER`.
+6. Consider turning it off again.
 
 
 ## TODO
