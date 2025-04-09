@@ -1,0 +1,8 @@
+fastapi
+python-multipart
+pillow
+python-docx
+validators
+segno
+uvicorn
+emoji
