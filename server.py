@@ -165,7 +165,7 @@ def authorized(authorization: str) -> bool:
     return authorization == os.environ["SUREMARK_SECRET"]
 
 
-def send_document(document):
+def print_document(document):
     bio = io.BytesIO()
     document.save(bio)
     with socket.create_connection((args.nchost, args.ncport)) as sock:
@@ -190,6 +190,7 @@ def handle_message(
 
     document = Document()
 
+    # Text-only form content is url, print QR code
     if (
         text
         and not file
@@ -198,6 +199,12 @@ def handle_message(
         img_byte_arr = io.BytesIO()
         segno.make(text, micro=False).save(img_byte_arr, kind=IMG_FORMAT, scale=50)
         document.add_picture(img_byte_arr, width=IMG_WIDTH)
+    
+    # Empty form    
+    if not text and not file:
+        raise HTTPException(status_code=400, detail="Nothing to print")
+    
+    # Print normal document, possibly with image
     else:
         if file:
             img_bytes = io.BytesIO(file.file.read())
@@ -216,7 +223,7 @@ def handle_message(
         if text:
             parseToParagraph(document.add_paragraph()).feed(text)
 
-    send_document(document)
+    print_document(document)
     return {"status": "ok"}
 
 
