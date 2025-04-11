@@ -172,7 +172,7 @@ def send_document(document):
         sock.sendall(bio.getvalue())
 
 
-@app.post("/authenticate")
+@app.post("/auth")
 def auth(authorization: str = Header(None)):
     if not authorized(authorization):
         raise HTTPException(status_code=403, detail="Unauthorized")
@@ -222,7 +222,7 @@ def handle_message(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Receive multi-part forms with text and images from authenticated users, generate a docx-document and cat that to some host."
+        description="Receive multi-part forms with text and images from authorized users, generate a docx-document and cat that to some host."
     )
     parser.add_argument("nchost", help="Host to send the documents to")
     parser.add_argument("--ncport", type=int, help="Port of target host", default=8000)
