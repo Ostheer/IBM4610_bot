@@ -9,6 +9,7 @@ curl -X POST "http://localhost:8000/chat" \
 """
 
 from fastapi import FastAPI, HTTPException, Header, File, Form, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
 import io
 from docx import Document
@@ -28,6 +29,15 @@ IMG_FORMAT = "png"
 
 
 app = FastAPI()
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 def process_image(image_file: Image) -> Image:
@@ -160,6 +170,13 @@ def send_document(document):
     document.save(bio)
     with socket.create_connection((args.nchost, args.ncport)) as sock:
         sock.sendall(bio.getvalue())
+
+
+@app.post("/authenticate")
+def auth(authorization: str = Header(None)):
+    if not authorized(authorization):
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    return "lekker man"
 
 
 @app.post("/chat")
