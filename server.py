@@ -187,6 +187,9 @@ def handle_message(
 ):
     if not authorized(authorization):
         raise HTTPException(status_code=403, detail="Unauthorized")
+    
+    if not text and not file:
+        raise HTTPException(status_code=400, detail="Nothing to print")
 
     document = Document()
 
@@ -199,10 +202,6 @@ def handle_message(
         img_byte_arr = io.BytesIO()
         segno.make(text, micro=False).save(img_byte_arr, kind=IMG_FORMAT, scale=50)
         document.add_picture(img_byte_arr, width=IMG_WIDTH)
-    
-    # Empty form    
-    if not text and not file:
-        raise HTTPException(status_code=400, detail="Nothing to print")
     
     # Print normal document, possibly with image
     else:
