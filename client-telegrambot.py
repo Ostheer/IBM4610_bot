@@ -12,6 +12,7 @@ import os
 
 # === Configuration ===
 BOT_TOKEN = os.environ["BOT_TOKEN"]
+ADMIN_USER_ID = int(os.environ["BOT_ADMIN"])
 BACKEND_PASS = os.environ["SUREMARK_SECRET"]
 BACKEND_URL = "http://localhost:8000/chat"
 AUTH_FILE = "authorized_users.txt"
@@ -64,6 +65,17 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if user_id not in authorized_users:
         await message.reply_text("Ge moet ff inloggen. Doe es /start.")
         return
+
+    # Notify admin
+    try:
+        username = update.effective_user.username or update.effective_user.full_name or f"User {user_id}"
+        if user_id != ADMIN_USER_ID:
+            await context.bot.send_message(
+                chat_id=ADMIN_USER_ID,
+                text=f"📩 {username} heeft u een fax gestuurd."
+            )
+    except Exception as e:
+        logger.warning(f"Failed to notify admin: {e}")
 
     # Prepare multipart request
     files = {}
