@@ -22,22 +22,28 @@ The macro then prints the document, suppressing any errors or warnings (about ma
 Lastly it deletes the file and terminates Word.
 
 ## Features
-* Temporarily disable printing, using the `/sleep` command
-* Manage list of blocked and allowed users from telegram, as admin.
 * Print unicode text. Including EMOJI 👁👅👁!!
 * Print images (with captions), automatically converted to black and white bitmaps.
-* Print Microsoft Office `.doc` and `.docx` files.
-* Request a template Microsoft Office `.docx` file with the correct paper size.
 * Get notified when you receive a fax.
-* Supports faxing stickers (remapping transparency to white)
 * Print superfast using a resident font, using the \<F\> html-style tag
 * Print numbers as EAN-13 barcode using the \<BAR\> tag
-* Pipe any output from your terminal to the printer with `mark`!
-* Print png files without compression, ideal for extreme aspect ratios!
+* Print png files without compression, ideal for extreme aspect ratios! (?)
 * Using [Willus' pdf reflower](https://www.willus.com/k2pdfopt/) you can print any pdf, such as two-column scientific publications. Just do `k2pdfopt input.pdf -w 400 -h 1620 -dpi 167 -idpi -2 && pdftoppm input_k2opt.pdf -r 250 out -png` and then send the resulting images to your bot (as files). Make sure you have `k2pdfopt` and `pdftoppm` in your path.
-* Automatically convert anything into a qr code using the `\qr` command
-* Directly put the bot in sleep mode using `ssh SERVER "pkill -USR2 suremark"`. Can be used with Apple's automation system to mute the SureMark while your phone is on Don't Disturb.
-* User help command
+* Automatically converts text messages that are urls (and urls only) to qr codes
+
+TODO
+* Supports faxing stickers (remapping transparency to white)
+
+# NOTE
+The information below is mostly outdated. 
+Current configuration:
+* Windows 7 VM using qemu/kvm, managed by Incus.
+* Simple netcat listener on loop in Windows
+* Incus container running Python backend that receives multipart forms, creates docx files and cats them to Windows
+* Multiple containers for frontends that send multipart forms to the backend
+
+More info is available [on my wiki](https://wiki.ostheer.nl/en/incus-windows-vm).
+
 
 ## Installation
 ### Linux / Server
