@@ -83,7 +83,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if message.photo:
         largest_photo = message.photo[-1]
-        caption = message.caption or ""
 
         file = await context.bot.get_file(largest_photo.file_id)
         file_bytes = BytesIO()
@@ -91,7 +90,15 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         file_bytes.seek(0)
 
         files['file'] = ('image.jpg', file_bytes, 'image/jpeg')
-        data['text'] = caption or ""
+        data['text'] = message.caption or ""
+    elif message.sticker:
+        file = await context.bot.get_file(message.sticker.file_id)
+        file_bytes = BytesIO()
+        await file.download_to_memory(out=file_bytes)
+        file_bytes.seek(0)
+
+        files['file'] = ('sticker.webp', file_bytes, "image/webp")
+        data['text'] = ""
     elif message.text:
         data['text'] = message.text
     else:
