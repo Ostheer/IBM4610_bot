@@ -14,7 +14,8 @@ import os
 BOT_TOKEN = os.environ["BOT_TOKEN"]
 ADMIN_USER_ID = int(os.environ["BOT_ADMIN"])
 BACKEND_PASS = os.environ["SUREMARK_SECRET"]
-BACKEND_URL = "http://localhost:8000/chat"
+_BACKEND_ADDR = os.environ.get("SUREMARK_BACKEND_ADDRESS", "localhost")
+BACKEND_URL = f"http://{_BACKEND_ADDR}:8000/chat"
 AUTH_FILE = "authorized_users.txt"
 
 # === Logging ===
@@ -122,7 +123,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             await message.reply_text("Godverdomme het is helemaal kapot. Sorry man.")
     except Exception as e:
-        logger.exception("Error sending request to backend")
+        logger.exception(f"Error sending request to backend. {type(e).__name__}: {e}.")
         await message.reply_text("Lol nu is het echt stuk")
 
 # === Main Application ===
