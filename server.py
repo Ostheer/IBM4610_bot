@@ -176,7 +176,7 @@ def print_document(document):
 def auth(authorization: str = Header(None)):
     if not authorized(authorization):
         raise HTTPException(status_code=403, detail="Unauthorized")
-    return "lekker man"
+    return {"detail": "lekker man"}
 
 
 @app.post("/chat")
@@ -223,7 +223,7 @@ def handle_message(
             parseToParagraph(document.add_paragraph()).feed(text)
 
     print_document(document)
-    return {"status": "ok"}
+    return {"detail": "ok"}
 
 
 if __name__ == "__main__":
