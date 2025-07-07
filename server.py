@@ -90,75 +90,88 @@ class parseToParagraph(HTMLParser):
                 return key
         return "Key Not Found"
 
-    def __init__(self, paragraph):
+    def __init__(self, document):
         super().__init__()
         self.reset()
-        self.paragraph = paragraph
+        self.document = document
+        self._new_paragraph()
         self.font = self.FONTS["normal"]
+    
+    def _new_paragraph(self):
+        self.paragraph = self.document.add_paragraph()
 
     def handle_starttag(self, tag, attrs):
-        try:
+        if tag in self.TAGS.values():
             sleutel = self._key_from_value(self.TAGS, tag.upper())
             self.font = self.FONTS[sleutel]
-        except KeyError:
-            self.font = self.FONTS["normal"]
+        elif tag.upper() == "DIV":
+            return
+        elif tag.upper() == "BR":
+            self._new_paragraph()
+
 
     def handle_endtag(self, tag):
-        self.font = self.FONTS["normal"]
+        if tag.upper() in self.TAGS.values():
+            self.font = self.FONTS["normal"]
+        elif tag == "DIV":
+            self._new_paragraph()
+    
 
-    def handle_data(self, text):
-        emojis = emoji.emoji_list(text)
-        if len(emojis) != 0:
-            Nemo = len(emojis)
-            Ntxt = len(text)
-            # divide the text up into segments enclosed by emoji
-            segments = []
-            for i in range(Nemo):
-                if emojis[i]["match_start"] == 0:
-                    # add emojus
-                    segments.append((0, 1, True))
-                    # add text following emojus
-                    first = 1
-                    try:
-                        last = emojis[i + 1]["match_end"]
-                    except IndexError:
-                        last = Ntxt
-                    segments.append((first, last, False))
-                elif emojis[i]["match_end"] == Ntxt - 1:
-                    # add text preceding first emojus
-                    if i == 0:
-                        segments.append((0, emojis[i]["match_end"], False))
-                    # add emojus
-                    segments.append((Ntxt - 1, Ntxt, True))
-                else:
-                    # add text preceding first emojus
-                    if i == 0:
-                        segments.append((0, emojis[i]["match_end"], False))
-                    # add emojus
-                    segments.append(
-                        (emojis[i]["match_start"], emojis[i]["match_end"], True)
-                    )
-                    # add text following emojus
-                    first = emojis[i]["match_end"]
-                    try:
-                        last = emojis[i + 1]["match_end"]
-                    except IndexError:
-                        last = Ntxt
-                    segments.append((first, last, False))
-            # add all segments to the document
-            for first, last, is_emojus in segments:
-                run = self.paragraph.add_run(text[first:last])
-                run.font.size = Pt(self.SIZE)
-                if is_emojus:
-                    run.font.name = self.FONTS["emoji"]
-                else:
-                    run.font.name = self.font
-                    run.bold = True
-        else:
-            run = self.paragraph.add_run(text)
+    def handle_data(self, data):
+        emojis = emoji.emoji_list(data)
+        Nemo = len(emojis)
+        Ntxt = len(data)
+
+        if Nemo == 0:
+            run = self.paragraph.add_run(data)
             run.font.name = self.font
             run.font.size = Pt(self.SIZE)
             run.bold = True
+            return
+        
+        # divide the text up into segments enclosed by emoji
+        segments = []
+        for i in range(Nemo):
+            if emojis[i]["match_start"] == 0:
+                # add emojus
+                segments.append((0, 1, True))
+                # add text following emojus
+                first = 1
+                try:
+                    last = emojis[i + 1]["match_end"]
+                except IndexError:
+                    last = Ntxt
+                segments.append((first, last, False))
+            elif emojis[i]["match_end"] == Ntxt - 1:
+                # add text preceding first emojus
+                if i == 0:
+                    segments.append((0, emojis[i]["match_end"], False))
+                # add emojus
+                segments.append((Ntxt - 1, Ntxt, True))
+            else:
+                # add text preceding first emojus
+                if i == 0:
+                    segments.append((0, emojis[i]["match_end"], False))
+                # add emojus
+                segments.append(
+                    (emojis[i]["match_start"], emojis[i]["match_end"], True)
+                )
+                # add text following emojus
+                first = emojis[i]["match_end"]
+                try:
+                    last = emojis[i + 1]["match_end"]
+                except IndexError:
+                    last = Ntxt
+                segments.append((first, last, False))
+        # add all segments to the document
+        for first, last, is_emojus in segments:
+            run = self.paragraph.add_run(data[first:last])
+            run.font.size = Pt(self.SIZE)
+            if is_emojus:
+                run.font.name = self.FONTS["emoji"]
+            else:
+                run.font.name = self.font
+                run.bold = True
 
 
 def authorized(authorization: str) -> bool:
@@ -175,8 +188,8 @@ def print_document(document):
 @app.post("/auth")
 def auth(authorization: str = Header(None)):
     if not authorized(authorization):
-        raise HTTPException(status_code=403, detail="Unauthorized")
-    return {"detail": "lekker man"}
+        raise HTTPException(status_code=403, detail="Dacht 't niet, he!")
+    return {"detail": "yoo welkom terug"}
 
 
 @app.post("/chat")
@@ -186,11 +199,11 @@ def handle_message(
     file: UploadFile = File(None),
 ):
     if not authorized(authorization):
-        raise HTTPException(status_code=403, detail="Unauthorized")
+        raise HTTPException(status_code=403, detail="Dacht 't niet, he!")
     
     if not text and not file:
-        raise HTTPException(status_code=400, detail="Nothing to print")
-
+        raise HTTPException(status_code=400, detail="Gaar niks om te verbonnen!")
+    
     document = Document()
 
     # Text-only form content is url, print QR code
@@ -211,7 +224,7 @@ def handle_message(
                 Image.open(img_bytes).verify()
             except Exception:
                 raise HTTPException(
-                    status_code=415, detail="Uploaded file does not look like an image."
+                    status_code=415, detail="Doe ff normaal man, da ken ik toch nie printen?!"
                 )
             else:
                 img = Image.open(img_bytes)
@@ -220,10 +233,10 @@ def handle_message(
                 img.save(img_byte_arr, format=IMG_FORMAT)
                 document.add_picture(img_byte_arr, width=IMG_WIDTH)
         if text:
-            parseToParagraph(document.add_paragraph()).feed(text)
+            parseToParagraph(document).feed(text)
 
     print_document(document)
-    return {"detail": "ok"}
+    return {"detail": "Uw bonnetje is onderweges"}
 
 
 if __name__ == "__main__":
